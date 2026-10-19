@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="ru.mirea.kinostudio.fx.controller.MainController" styleClass="root-pane">
+    <top>
+        <HBox styleClass="app-header" alignment="CENTER_LEFT" spacing="12">
+            <Label text="Киностудия" styleClass="app-title"/>
+            <Label text="заявки на съёмку" styleClass="app-subtitle"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Обновить данные" onAction="#onRefresh" styleClass="ghost"/>
+        </HBox>
+    </top>
+    <center>
+        <TabPane tabClosingPolicy="UNAVAILABLE" styleClass="main-tabs">
+            <Tab text="Заявки"><content><fx:include source="requests-tab.fxml"/></content></Tab>
+            <Tab text="Клиенты"><content><fx:include source="clients-tab.fxml"/></content></Tab>
+            <Tab text="Локации"><content><fx:include source="locations-tab.fxml"/></content></Tab>
+            <Tab text="Статистика"><content><fx:include source="statistics-tab.fxml"/></content></Tab>
+        </TabPane>
+    </center>
+    <bottom>
+        <HBox styleClass="status-bar" alignment="CENTER_LEFT">
+            <Label fx:id="dbLabel" styleClass="muted"/>
+        </HBox>
+    </bottom>
+</BorderPane>

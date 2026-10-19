@@ -92,6 +92,11 @@ public class ShootingRequestService {
         repository.deleteById(id);
     }
 
+    /** Статусы, в которые можно перевести заявку из текущего (нужно интерфейсу для выбора). */
+    public java.util.Set<RequestStatus> getAllowedTransitions(RequestStatus from) {
+        return java.util.Collections.unmodifiableSet(ALLOWED_TRANSITIONS.get(from));
+    }
+
     // ---- Поиск / фильтрация / сортировка (делегирование в репозиторий) ----
 
     public List<ShootingRequest> searchByTitle(String keyword) throws SQLException {

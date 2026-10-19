@@ -20,3 +20,4 @@ dependency-reduced-pom.xml
 *.log
 .env
 .env.local
+_to_delete/

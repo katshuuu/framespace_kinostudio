@@ -1,0 +1,78 @@
+/* Общие стили приложения «Киностудия». Цвета заданы переменными в .root. */
+.root {
+    -accent: #3b5bdb;
+    -accent-dark: #2f49b3;
+    -danger: #c92a2a;
+    -bg: #f4f6fa;
+    -card: #ffffff;
+    -border: #d9dee8;
+    -text: #1f2430;
+    -muted: #6b7385;
+    -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    -fx-font-size: 13px;
+    -fx-base: #f4f6fa;
+    -fx-background-color: -bg;
+    -fx-text-fill: -text;
+}
+
+.label { -fx-text-fill: -text; }
+.muted { -fx-text-fill: -muted; }
+
+/* Шапка и строка состояния */
+.app-header { -fx-background-color: #1f2a5c; -fx-padding: 12 18 12 18; }
+.app-title { -fx-text-fill: white; -fx-font-size: 20px; -fx-font-weight: bold; }
+.app-subtitle { -fx-text-fill: #b9c3ee; -fx-font-size: 14px; }
+.status-bar { -fx-padding: 5 16 5 16; -fx-background-color: #e9edf5; -fx-border-color: -border; -fx-border-width: 1 0 0 0; }
+
+.tab-content { -fx-background-color: -bg; }
+.card { -fx-background-color: -card; -fx-background-radius: 8; -fx-border-color: -border; -fx-border-radius: 8; -fx-padding: 10 12 10 12; }
+.section-caption { -fx-font-weight: bold; -fx-font-size: 13px; -fx-text-fill: #39415a; }
+.detail-title { -fx-font-weight: bold; -fx-font-size: 14px; }
+
+/* Кнопки */
+.button { -fx-background-radius: 6; -fx-border-radius: 6; -fx-padding: 6 14 6 14; -fx-cursor: hand; }
+.button.primary { -fx-background-color: -accent; -fx-text-fill: white; -fx-font-weight: bold; }
+.button.primary:hover { -fx-background-color: -accent-dark; }
+.button.danger { -fx-text-fill: -danger; }
+.button.ghost { -fx-background-color: transparent; -fx-border-color: -border; }
+.app-header .button.ghost { -fx-text-fill: white; -fx-border-color: #6a78c4; }
+.button:disabled { -fx-opacity: 0.45; }
+
+/* Вкладки */
+.main-tabs > .tab-header-area > .headers-region > .tab { -fx-padding: 4 14 4 14; }
+.main-tabs > .tab-header-area > .headers-region > .tab .tab-label { -fx-font-size: 14px; }
+
+/* Таблицы */
+.table-view { -fx-background-radius: 8; -fx-border-color: -border; -fx-border-radius: 8; }
+.table-view .column-header-background { -fx-background-color: #e9edf5; }
+.table-view .column-header .label { -fx-font-weight: bold; }
+.table-view .table-row-cell:selected { -fx-background-color: #dbe4ff; }
+.table-view .table-row-cell:selected .table-cell { -fx-text-fill: -text; }
+.table-view .table-column.right { -fx-alignment: CENTER-RIGHT; }
+.table-cell.status-new { -fx-text-fill: #1c7ed6; -fx-font-weight: bold; }
+.table-cell.status-approved { -fx-text-fill: #2b8a3e; -fx-font-weight: bold; }
+.table-cell.status-in-progress { -fx-text-fill: #e8590c; -fx-font-weight: bold; }
+.table-cell.status-completed { -fx-text-fill: #495057; -fx-font-weight: bold; }
+.table-cell.status-rejected { -fx-text-fill: -danger; -fx-font-weight: bold; }
+.table-cell.status-cancelled { -fx-text-fill: #868e96; -fx-font-weight: bold; }
+
+/* Поля ввода и ошибки валидации */
+.text-field, .text-area, .combo-box-base, .date-picker { -fx-background-radius: 6; }
+.text-field.invalid, .text-area.invalid .content, .combo-box-base.invalid, .date-picker.invalid {
+    -fx-border-color: -danger; -fx-border-radius: 6; -fx-border-width: 1.5;
+}
+.error-text { -fx-text-fill: -danger; }
+.error-box {
+    -fx-text-fill: -danger; -fx-background-color: #fff0f0; -fx-border-color: #f3b4b4;
+    -fx-border-radius: 6; -fx-background-radius: 6; -fx-padding: 8 10 8 10;
+}
+
+/* Статистика */
+.stat-card { -fx-background-color: -card; -fx-background-radius: 8; -fx-border-color: -border; -fx-border-radius: 8; -fx-padding: 12 14 12 14; }
+.stat-caption { -fx-text-fill: -muted; -fx-font-size: 12px; }
+.stat-value { -fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #1f2a5c; }
+.chart-bar { -fx-bar-fill: -accent; }
+
+/* Диалоги */
+.dialog-pane { -fx-background-color: white; }
+.dialog-pane .header-panel { -fx-background-color: #eef1f8; }
