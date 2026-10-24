@@ -1,0 +1,3 @@
+# Скрипты для Linux-контейнера должны быть с переводами строк LF даже при клонировании на Windows
+*.sh text eol=lf
+Dockerfile text eol=lf

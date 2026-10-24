@@ -14,9 +14,10 @@
     </HBox>
 
     <HBox spacing="8" alignment="CENTER_LEFT">
-        <Button text="＋ Добавить" onAction="#onAdd" styleClass="primary"/>
+        <Button fx:id="addButton" text="＋ Добавить" onAction="#onAdd" styleClass="primary"/>
         <Button fx:id="editButton" text="Изменить" onAction="#onEdit"/>
         <Button fx:id="deleteButton" text="Удалить" onAction="#onDelete" styleClass="danger"/>
+        <Label fx:id="readOnlyHint" text="Режим просмотра: изменять данные может только администратор" styleClass="muted" visible="false" managed="false"/>
         <Region HBox.hgrow="ALWAYS"/>
         <Label fx:id="countLabel" styleClass="muted"/>
     </HBox>

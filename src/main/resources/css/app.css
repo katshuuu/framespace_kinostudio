@@ -76,3 +76,9 @@
 /* Диалоги */
 .dialog-pane { -fx-background-color: white; }
 .dialog-pane .header-panel { -fx-background-color: #eef1f8; }
+
+/* Окно входа */
+.login-root { -fx-background-color: linear-gradient(to bottom right, #1f2a5c, #3b5bdb); -fx-padding: 24; }
+.login-card { -fx-background-color: white; -fx-background-radius: 12; -fx-padding: 24 26 22 26; }
+.login-title { -fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: #1f2a5c; }
+.app-user { -fx-text-fill: #dfe5ff; -fx-font-weight: bold; }

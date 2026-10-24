@@ -1,0 +1,50 @@
+# По заданию JavaFX-приложение запускается на компьютере (mvn javafx:run), а в Docker работает PostgreSQL:
+#     docker compose up -d db
+# Необязательный режим «окно в браузере» (приложение тоже в контейнере):
+#     docker compose --profile gui up --build
+# Параметры берутся из файла .env (создайте его: cp .env.example .env).
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: kinostudio-db
+    environment:
+      POSTGRES_DB: ${DB_NAME:-kinostudio_db}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?Задайте DB_PASSWORD в файле .env}
+    ports:
+      - "127.0.0.1:${DB_PUBLISHED_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # при первом запуске выполняются sql/schema.sql (таблицы и тестовые данные из КР №1) и sql/users.sql (пользователи)
+      - ./sql:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  app:
+    profiles: ["gui"]      # запускается только с --profile gui
+    build: .
+    # В Maven Central нет JavaFX 21 для Linux ARM (Mac на M1/M2/M3), поэтому контейнер собирается и запускается как x86-64.
+    # На Mac с Apple Silicon Docker Desktop делает это сам (медленнее, но работает).
+    platform: linux/amd64
+    container_name: kinostudio-app
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DB_HOST: db            # внутри Docker-сети база доступна по имени сервиса
+      DB_PORT: "5432"
+      DB_NAME: ${DB_NAME:-kinostudio_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD}
+      ADMIN_LOGIN: ${ADMIN_LOGIN:?Задайте ADMIN_LOGIN в файле .env}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?Задайте ADMIN_PASSWORD в файле .env}
+    ports:
+      - "127.0.0.1:${NOVNC_PORT:-6080}:6080"
+    volumes:
+      - ./exports:/exports   # сюда сохраняются файлы экспорта
+
+volumes:
+  pgdata:

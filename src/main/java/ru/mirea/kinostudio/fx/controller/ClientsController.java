@@ -60,6 +60,8 @@ public class ClientsController {
     @FXML private TableColumn<Client, String> emailCol;
     @FXML private TableColumn<Client, String> phoneCol;
     @FXML private TableColumn<Client, Integer> countCol;
+    @FXML private Button addButton;
+    @FXML private Label readOnlyHint;
     @FXML private Button editButton;
     @FXML private Button deleteButton;
     @FXML private Label relatedTitle;
@@ -106,8 +108,13 @@ public class ClientsController {
         filtered.addListener((javafx.collections.ListChangeListener<Client>) c -> updateCount());
 
         var none = Bindings.isNull(table.getSelectionModel().selectedItemProperty());
-        editButton.disableProperty().bind(none);
-        deleteButton.disableProperty().bind(none);
+        // Изменять справочник может только администратор; обычный пользователь — только просматривает
+        var notAdmin = new javafx.beans.property.SimpleBooleanProperty(!ctx.isAdmin());
+        addButton.setDisable(!ctx.isAdmin());
+        editButton.disableProperty().bind(none.or(notAdmin));
+        deleteButton.disableProperty().bind(none.or(notAdmin));
+        readOnlyHint.setVisible(!ctx.isAdmin());
+        readOnlyHint.setManaged(!ctx.isAdmin());
         table.getSelectionModel().selectedItemProperty().addListener((o, a, b) -> showRelated(b));
         showRelated(null);
 
@@ -162,6 +169,7 @@ public class ClientsController {
 
     @FXML
     private void onAdd() {
+        if (!ctx.isAdmin()) return;
         if (FormDialogs.<ClientDialogController>show(Dialogs.ownerOf(table), "Новый клиент",
                 "/fxml/client-dialog.fxml", c -> c.setClient(null))) {
             ctx.dataChanged();
@@ -170,6 +178,7 @@ public class ClientsController {
 
     @FXML
     private void onEdit() {
+        if (!ctx.isAdmin()) return;
         Client c = table.getSelectionModel().getSelectedItem();
         if (c == null) return;
         if (FormDialogs.<ClientDialogController>show(Dialogs.ownerOf(table), "Редактирование клиента",
@@ -180,6 +189,7 @@ public class ClientsController {
 
     @FXML
     private void onDelete() {
+        if (!ctx.isAdmin()) return;
         Client c = table.getSelectionModel().getSelectedItem();
         if (c == null) return;
         int n = requestsByClient.getOrDefault(c.getId(), List.of()).size();

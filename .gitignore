@@ -21,3 +21,7 @@ dependency-reduced-pom.xml
 .env
 .env.local
 _to_delete/
+
+# Docker: файлы экспорта
+exports/*
+!exports/.gitkeep

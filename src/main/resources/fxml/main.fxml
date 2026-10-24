@@ -11,7 +11,9 @@
             <Label text="Киностудия" styleClass="app-title"/>
             <Label text="заявки на съёмку" styleClass="app-subtitle"/>
             <Region HBox.hgrow="ALWAYS"/>
+            <Label fx:id="userLabel" styleClass="app-user"/>
             <Button text="Обновить данные" onAction="#onRefresh" styleClass="ghost"/>
+            <Button text="Выйти" onAction="#onLogout" styleClass="ghost"/>
         </HBox>
     </top>
     <center>

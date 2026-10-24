@@ -19,6 +19,7 @@ import ru.mirea.kinostudio.model.Location;
 import ru.mirea.kinostudio.model.RequestStatus;
 import ru.mirea.kinostudio.model.RequestView;
 import ru.mirea.kinostudio.service.RequestFilter;
+import ru.mirea.kinostudio.util.AppConfig;
 import ru.mirea.kinostudio.util.CsvExporter;
 import ru.mirea.kinostudio.util.Labels;
 import ru.mirea.kinostudio.util.XlsxExporter;
@@ -161,9 +162,11 @@ public class RequestsController {
 
     private void setupSelection() {
         var none = Bindings.isNull(table.getSelectionModel().selectedItemProperty());
+        // Удалять заявки и менять их статус может только администратор
+        var notAdmin = new javafx.beans.property.SimpleBooleanProperty(!ctx.isAdmin());
         editButton.disableProperty().bind(none);
-        deleteButton.disableProperty().bind(none);
-        statusButton.disableProperty().bind(none);
+        deleteButton.disableProperty().bind(none.or(notAdmin));
+        statusButton.disableProperty().bind(none.or(notAdmin));
         table.getSelectionModel().selectedItemProperty().addListener((o, a, b) -> showDetails(b));
         showDetails(null);
     }
@@ -273,6 +276,7 @@ public class RequestsController {
 
     @FXML
     private void onDelete() {
+        if (!ctx.isAdmin()) return;
         RequestView v = table.getSelectionModel().getSelectedItem();
         if (v == null) return;
         if (!Dialogs.confirm(Dialogs.ownerOf(table),
@@ -293,6 +297,7 @@ public class RequestsController {
 
     @FXML
     private void onChangeStatus() {
+        if (!ctx.isAdmin()) return;
         RequestView v = table.getSelectionModel().getSelectedItem();
         if (v == null) return;
         List<RequestStatus> allowed = List.copyOf(ctx.requestService.getAllowedTransitions(v.getStatus()));
@@ -327,6 +332,10 @@ public class RequestsController {
         }
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Экспорт заявок");
+        String exportDir = AppConfig.get("EXPORT_DIR"); // в Docker файлы сохраняются в смонтированную папку exports/
+        if (exportDir != null && new File(exportDir).isDirectory()) {
+            chooser.setInitialDirectory(new File(exportDir));
+        }
         chooser.setInitialFileName("zayavki-" + LocalDate.now() + ".xlsx");
         FileChooser.ExtensionFilter xlsx = new FileChooser.ExtensionFilter("Excel (*.xlsx)", "*.xlsx");
         FileChooser.ExtensionFilter csv = new FileChooser.ExtensionFilter("CSV (*.csv)", "*.csv");

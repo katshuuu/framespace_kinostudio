@@ -64,6 +64,8 @@ public class LocationsController {
     @FXML private TableColumn<Location, String> addressCol;
     @FXML private TableColumn<Location, Integer> capacityCol;
     @FXML private TableColumn<Location, Integer> countCol;
+    @FXML private Button addButton;
+    @FXML private Label readOnlyHint;
     @FXML private Button editButton;
     @FXML private Button deleteButton;
     @FXML private Label relatedTitle;
@@ -114,8 +116,13 @@ public class LocationsController {
         filtered.addListener((javafx.collections.ListChangeListener<Location>) c -> updateCount());
 
         var none = Bindings.isNull(table.getSelectionModel().selectedItemProperty());
-        editButton.disableProperty().bind(none);
-        deleteButton.disableProperty().bind(none);
+        // Изменять справочник может только администратор; обычный пользователь — только просматривает
+        var notAdmin = new javafx.beans.property.SimpleBooleanProperty(!ctx.isAdmin());
+        addButton.setDisable(!ctx.isAdmin());
+        editButton.disableProperty().bind(none.or(notAdmin));
+        deleteButton.disableProperty().bind(none.or(notAdmin));
+        readOnlyHint.setVisible(!ctx.isAdmin());
+        readOnlyHint.setManaged(!ctx.isAdmin());
         table.getSelectionModel().selectedItemProperty().addListener((o, a, b) -> showRelated(b));
         showRelated(null);
 
@@ -178,6 +185,7 @@ public class LocationsController {
 
     @FXML
     private void onAdd() {
+        if (!ctx.isAdmin()) return;
         if (FormDialogs.<LocationDialogController>show(Dialogs.ownerOf(table), "Новая локация",
                 "/fxml/location-dialog.fxml", d -> d.setLocation(null))) {
             ctx.dataChanged();
@@ -186,6 +194,7 @@ public class LocationsController {
 
     @FXML
     private void onEdit() {
+        if (!ctx.isAdmin()) return;
         Location l = table.getSelectionModel().getSelectedItem();
         if (l == null) return;
         if (FormDialogs.<LocationDialogController>show(Dialogs.ownerOf(table), "Редактирование локации",
@@ -196,6 +205,7 @@ public class LocationsController {
 
     @FXML
     private void onDelete() {
+        if (!ctx.isAdmin()) return;
         Location l = table.getSelectionModel().getSelectedItem();
         if (l == null) return;
         if (!Dialogs.confirm(Dialogs.ownerOf(table),

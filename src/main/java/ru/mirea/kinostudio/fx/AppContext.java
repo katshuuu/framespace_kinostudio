@@ -4,6 +4,9 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import ru.mirea.kinostudio.model.Client;
 import ru.mirea.kinostudio.model.Location;
+import ru.mirea.kinostudio.model.User;
+import ru.mirea.kinostudio.repository.UserRepository;
+import ru.mirea.kinostudio.service.AuthService;
 import ru.mirea.kinostudio.repository.ClientRepository;
 import ru.mirea.kinostudio.repository.LocationRepository;
 import ru.mirea.kinostudio.repository.ShootingRequestRepository;
@@ -33,6 +36,9 @@ public final class AppContext {
     public final ShootingRequestService requestService;
     public final RequestViewService viewService;
     public final StatisticsService statisticsService = new StatisticsService();
+    public final AuthService authService = new AuthService(new UserRepository());
+
+    private User currentUser;
 
     private final ObservableList<Client> clients = FXCollections.observableArrayList();
     private final ObservableList<Location> locations = FXCollections.observableArrayList();
@@ -58,6 +64,32 @@ public final class AppContext {
 
     public ObservableList<Location> locations() {
         return locations;
+    }
+
+    /** Вошедший пользователь (null, пока не выполнен вход). */
+    public User currentUser() {
+        return currentUser;
+    }
+
+    public void setCurrentUser(User user) {
+        this.currentUser = user;
+    }
+
+    public boolean isAdmin() {
+        return currentUser != null && currentUser.isAdmin();
+    }
+
+    /** Выход: забываем пользователя и отписываем вкладки старого окна. */
+    public void logout() {
+        currentUser = null;
+        listeners.clear();
+        clients.clear();
+        locations.clear();
+    }
+
+    /** Новое главное окно: старые подписчики больше не нужны. */
+    public void clearListeners() {
+        listeners.clear();
     }
 
     public void reloadReferences() throws SQLException {

@@ -1,0 +1,8 @@
+target
+.git
+.github
+.idea
+.env
+_to_delete
+exports
+*.xlsx
