@@ -104,7 +104,11 @@ public class LocationsController {
         relatedTable.setItems(locationRequests);
         relatedTable.setPlaceholder(new Label("На этой локации нет заявок"));
 
-        typeFilter.setItems(FXCollections.observableArrayList(LocationType.values()));
+        // Первый элемент null — пункт «Все типы» (показывается как подсказка promptText)
+        ObservableList<LocationType> typeOptions = FXCollections.observableArrayList();
+        typeOptions.add(null);
+        typeOptions.addAll(LocationType.values());
+        typeFilter.setItems(typeOptions);
         typeFilter.setConverter(Converters.locationType());
         sortBox.setItems(FXCollections.observableArrayList(SortOption.values()));
         sortBox.setConverter(Converters.of(o -> o.label));

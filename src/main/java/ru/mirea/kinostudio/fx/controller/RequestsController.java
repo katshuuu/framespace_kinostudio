@@ -61,6 +61,9 @@ public class RequestsController {
     private final ObservableList<RequestView> all = FXCollections.observableArrayList();
     private final FilteredList<RequestView> filtered = new FilteredList<>(all, v -> true);
     private final SortedList<RequestView> sorted = new SortedList<>(filtered);
+    // Первый элемент null — пункт «Все …» (показывается как подсказка promptText)
+    private final ObservableList<RequestStatus> statusOptions = FXCollections.observableArrayList();
+    private final ObservableList<Location> locationOptions = FXCollections.observableArrayList();
 
     @FXML private TextField searchField;
     @FXML private ComboBox<RequestStatus> statusFilter;
@@ -140,9 +143,12 @@ public class RequestsController {
     }
 
     private void setupFilters() {
-        statusFilter.setItems(FXCollections.observableArrayList(RequestStatus.values()));
+        statusOptions.add(null);
+        statusOptions.addAll(RequestStatus.values());
+        statusFilter.setItems(statusOptions);
         statusFilter.setConverter(Converters.status());
-        locationFilter.setItems(ctx.locations());
+        refreshLocationOptions(null);
+        locationFilter.setItems(locationOptions);
         locationFilter.setConverter(Converters.location());
         fromPicker.setConverter(Converters.date());
         toPicker.setConverter(Converters.date());
@@ -184,15 +190,23 @@ public class RequestsController {
             Dialogs.dbError(Dialogs.ownerOf(table), e);
             return;
         }
-        // Справочник локаций обновился (новые объекты) — восстанавливаем выбор в фильтре
-        if (keepLocationId != null) {
-            ctx.locations().stream().filter(l -> l.getId() == keepLocationId)
-                    .findFirst().ifPresent(locationFilter::setValue);
-        }
+        // Справочник локаций обновился (новые объекты) — пересобираем список и восстанавливаем выбор в фильтре
+        refreshLocationOptions(keepLocationId);
         applyFilter();
         if (keepId != null) {
             sorted.stream().filter(v -> v.getId() == keepId).findFirst()
                     .ifPresent(v -> table.getSelectionModel().select(v));
+        }
+    }
+
+    /** Список для фильтра: пункт «Все локации» (null) и локации из справочника. */
+    private void refreshLocationOptions(Integer keepId) {
+        locationOptions.clear();
+        locationOptions.add(null);
+        locationOptions.addAll(ctx.locations());
+        if (keepId != null) {
+            ctx.locations().stream().filter(l -> l.getId() == keepId)
+                    .findFirst().ifPresent(locationFilter::setValue);
         }
     }
 
