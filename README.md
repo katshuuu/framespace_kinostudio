@@ -2,7 +2,7 @@
 
 Консольная информационная система на Java для учёта клиентов киностудии, съёмочных локаций и заявок на съёмку. Данные хранятся в PostgreSQL. Доступ к ним выполняется через JDBC, бизнес-правила сосредоточены в сервисном слое, пользователь работает через интерактивное меню.
 
-Контрольная работа 1. Предметная область сохраняется для последующих работ: консольное приложение, затем JavaFX, Spring REST и Android.
+Контрольная работа 1 оставила консольное приложение. Контрольная работа 2 добавляет схему сотрудника API, REST-контракт, CRUD с JWT и пайплайн Checkstyle и тестов. Консольный класс `Main` при этом не заменяется: меню и HTTP вызывают одни и те же сервисы.
 
 ## Технологии
 
@@ -11,11 +11,18 @@
 - JDBC и драйвер PostgreSQL 42.7.3
 - PostgreSQL
 - Apache POI 5.2.5 — экспорт в Excel `.xlsx`
+- JDK `HttpServer` — REST на порту 7070
+- `java-jwt` — подпись HMAC-SHA256
+- `jbcrypt` — хеш пароля сотрудника
+- Jackson — тела `application/json`
+- JUnit 5 и Checkstyle — шаг `mvn verify`
 
 ## Архитектура
 
 ```
-Консольное меню → Сервис → Репозиторий (JDBC) → PostgreSQL
+Консольное меню ─┐
+                 ├→ Сервис → Репозиторий (JDBC) → PostgreSQL
+REST API (JWT) ──┘
 ```
 
 - Меню принимает ввод и показывает результат. SQL в меню отсутствует.
@@ -28,45 +35,60 @@
 ```
 src/main/java/ru/mirea/kinostudio/
 ├── Main.java                          точка входа и консольное меню
+├── api/
+│   ├── ApiServer.java                 точка входа HTTP, порт 7070
+│   ├── StudioResources.java           CRUD клиентов, локаций и заявок
+│   └── auth/                          регистрация, вход, JWT, bcrypt
 ├── model/
 │   ├── Client.java                    клиент студии
 │   ├── Location.java                  локация
 │   ├── LocationType.java              тип локации
 │   ├── ShootingRequest.java           заявка на съёмку
-│   └── RequestStatus.java             статус заявки
+│   ├── RequestStatus.java             статус заявки
+│   └── User.java                      сотрудник API, не заказчик
 ├── repository/
 │   ├── Repository.java                обобщённый интерфейс CRUD
 │   ├── ClientRepository.java
 │   ├── LocationRepository.java
-│   └── ShootingRequestRepository.java
+│   ├── ShootingRequestRepository.java
+│   ├── UserStore.java                 хранилище сотрудников
+│   └── UserRepository.java
 ├── service/
 │   ├── ClientService.java
 │   ├── LocationService.java
 │   └── ShootingRequestService.java
 ├── exception/
 │   ├── BusinessException.java
+│   ├── ConflictException.java        занятый логин, ответ API 409
 │   └── EntityNotFoundException.java
 └── util/
     ├── DatabaseManager.java           подключение к PostgreSQL
     ├── ConsoleUtils.java              безопасный ввод
     └── ExcelExporter.java             экспорт в .xlsx
 
-sql/schema.sql                         схема и тестовые данные
+sql/schema.sql                         схема клиентов, локаций и заявок
+sql/users.sql                          таблица сотрудников API
 docs/er-diagram.md                     ER-диаграмма
+docs/api-contract.md                   контракт REST
+checkstyle.xml                         правила линтера для пакета api
+.github/workflows/ci.yml               Checkstyle и тесты на push и pull request
 pom.xml
 ```
 
 ## Предметная модель
 
-Три связанные сущности:
+Три связанные сущности предметной области и отдельная таблица входа:
 
 | Таблица | Назначение | Связь |
 |---|---|---|
 | `clients` | заказчик съёмки | один клиент — много заявок |
 | `locations` | павильон, студия, натура или офис | одна локация — много заявок |
 | `shooting_requests` | заявка на съёмку | `client_id` и `location_id` |
+| `users` | сотрудник, который входит в API | отдельная таблица, без внешнего ключа на `clients` |
 
 Удаление клиента каскадно удаляет его заявки (`ON DELETE CASCADE`). Локацию, на которую ссылаются заявки, база не удаляет (`ON DELETE RESTRICT`). Дополнительно сервис запрещает удалять локацию, пока на неё есть заявки в статусах `NEW`, `APPROVED` или `IN_PROGRESS`.
+
+Таблица `users` хранит логин и bcrypt-хеш пароля сотрудника. Она не входит в `sql/schema.sql`: заказчик съёмки в систему не входит, и пароль у клиента не хранится. Определение лежит в `sql/users.sql`. При старте API та же таблица создаётся командой `CREATE TABLE IF NOT EXISTS`, если скрипт ещё не применяли.
 
 Статусы заявки: `NEW`, `APPROVED`, `IN_PROGRESS`, `COMPLETED`, `REJECTED`, `CANCELLED`. Типы локации: `PAVILION`, `OUTDOOR`, `STUDIO`, `OFFICE`.
 
@@ -174,6 +196,28 @@ java -jar target/kinostudio-crm.jar
 
 Экспорт (пункт 7) создаёт `kinostudio_export.xlsx` в текущем каталоге. Запускайте команду из корня проекта, если файл должен лежать рядом с исходниками.
 
+### 5. Запустить REST API
+
+Консоль и API — разные точки входа. Для API нужен секрет не короче 32 символов:
+
+```bash
+export JWT_SECRET="framespace-dev-secret-key-32chars"
+java -cp target/kinostudio-crm.jar ru.mirea.kinostudio.api.ApiServer
+```
+
+Сервер слушает `http://localhost:7070`. Если логина `admin` ещё нет, создаётся сотрудник `admin` / `admin123`, ФИО «Администратор». Это строка таблицы `users`, а не клиент киностудии.
+
+Открытые маршруты: `GET /api/health`, `POST /api/auth/register`, `POST /api/auth/login`. Остальные требуют заголовок `Authorization: Bearer <token>`. Контракт, коды ответов и примеры тел — в `docs/api-contract.md`.
+
+Проверка без токена и со входом:
+
+```bash
+curl -s http://localhost:7070/api/health
+curl -s -X POST http://localhost:7070/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"admin123"}'
+```
+
 ### Если программа не подключается к базе
 
 Сообщение «Ошибка базы данных» означает, что сервер недоступен, база не создана или константы в `DatabaseManager` не совпадают с локальной установкой. Проверьте, что PostgreSQL принимает соединения:
@@ -183,3 +227,15 @@ pg_isready -h localhost -p 5432
 ```
 
 Затем повторите шаг 1 и сверьте константы подключения.
+
+## CI
+
+На каждый push и pull request GitHub Actions выполняет `mvn -B verify`. База на этом шаге не нужна.
+
+Checkstyle смотрит только пакет `ru.mirea.kinostudio.api`: без табуляции, строка не длиннее 140 символов, у `if` и циклов есть фигурные скобки, нет неиспользуемых импортов. JUnit без PostgreSQL проверяет регистрацию, повторный вход, дубликат логина, короткий пароль, одинаковый текст ошибки для неверного пароля и неизвестного логина, токен с испорченной подписью и `RequestStatus.fromString`.
+
+Локально:
+
+```bash
+mvn -B verify
+```
