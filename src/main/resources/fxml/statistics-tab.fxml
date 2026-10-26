@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ru.mirea.kinostudio.fx.controller.StatisticsController" spacing="14" styleClass="tab-content">
+    <padding><Insets top="14" right="16" bottom="12" left="16"/></padding>
+
+    <Label text="Основные показатели" styleClass="section-caption"/>
+    <HBox spacing="12">
+            <VBox styleClass="stat-card" spacing="4" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <Label text="Всего заявок" styleClass="stat-caption" wrapText="true"/>
+                <Label fx:id="totalValue" styleClass="stat-value" wrapText="true"/>
+            </VBox>
+            <VBox styleClass="stat-card" spacing="4" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <Label text="Суммарный бюджет" styleClass="stat-caption" wrapText="true"/>
+                <Label fx:id="sumValue" styleClass="stat-value" wrapText="true"/>
+            </VBox>
+            <VBox styleClass="stat-card" spacing="4" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <Label text="Средний бюджет заявки" styleClass="stat-caption" wrapText="true"/>
+                <Label fx:id="avgValue" styleClass="stat-value" wrapText="true"/>
+            </VBox>
+            <VBox styleClass="stat-card" spacing="4" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <Label text="Бюджет: минимум / максимум" styleClass="stat-caption" wrapText="true"/>
+                <Label fx:id="minMaxValue" styleClass="stat-value" wrapText="true"/>
+            </VBox>
+    </HBox>
+    <HBox spacing="12">
+            <VBox styleClass="stat-card" spacing="4" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <Label text="Средняя длительность съёмки" styleClass="stat-caption" wrapText="true"/>
+                <Label fx:id="durationValue" styleClass="stat-value" wrapText="true"/>
+            </VBox>
+        <VBox styleClass="stat-card" spacing="4" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+            <Label fx:id="upcomingCaption" styleClass="stat-caption" wrapText="true"/>
+            <Label fx:id="upcomingValue" styleClass="stat-value"/>
+        </VBox>
+            <VBox styleClass="stat-card" spacing="4" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <Label text="Доля завершённых заявок" styleClass="stat-caption" wrapText="true"/>
+                <Label fx:id="completedValue" styleClass="stat-value" wrapText="true"/>
+            </VBox>
+            <VBox styleClass="stat-card" spacing="4" HBox.hgrow="ALWAYS" maxWidth="Infinity">
+                <Label text="Самая востребованная локация" styleClass="stat-caption" wrapText="true"/>
+                <Label fx:id="topLocationValue" styleClass="stat-value" wrapText="true"/>
+            </VBox>
+    </HBox>
+
+    <HBox spacing="14" VBox.vgrow="ALWAYS">
+        <VBox spacing="6" HBox.hgrow="ALWAYS">
+            <Label text="Заявки по статусам" styleClass="section-caption"/>
+            <BarChart fx:id="statusChart" legendVisible="false" animated="false" VBox.vgrow="ALWAYS">
+                <xAxis><CategoryAxis/></xAxis>
+                <yAxis><NumberAxis minorTickVisible="false" tickUnit="1"/></yAxis>
+            </BarChart>
+        </VBox>
+        <VBox spacing="6" prefWidth="430" minWidth="380">
+            <Label text="Локации: заявки и бюджет" styleClass="section-caption"/>
+            <TableView fx:id="locationTable" VBox.vgrow="ALWAYS">
+                <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
+                <columns>
+                    <TableColumn fx:id="locNameCol" text="Локация" minWidth="150"/>
+                    <TableColumn fx:id="locCountCol" text="Заявок" minWidth="65" maxWidth="80"/>
+                    <TableColumn fx:id="locSumCol" text="Бюджет" minWidth="120"/>
+                </columns>
+            </TableView>
+        </VBox>
+    </HBox>
+</VBox>

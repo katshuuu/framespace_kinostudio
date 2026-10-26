@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ru.mirea.kinostudio.fx.controller.LoginController" styleClass="login-root" alignment="CENTER">
+    <VBox styleClass="login-card" spacing="14" maxWidth="400" alignment="TOP_CENTER">
+        <Label text="Киностудия" styleClass="login-title"/>
+        <Label text="Информационная система заявок на съёмку" styleClass="muted" wrapText="true"/>
+
+        <TabPane tabClosingPolicy="UNAVAILABLE" styleClass="main-tabs">
+            <Tab text="Вход">
+                <content>
+                    <VBox spacing="10">
+                        <padding><Insets top="14" right="4" bottom="4" left="4"/></padding>
+                        <Label text="Логин"/>
+                        <TextField fx:id="loginField" promptText="Логин" onAction="#onLogin"/>
+                        <Label text="Пароль"/>
+                        <PasswordField fx:id="passwordField" promptText="Пароль" onAction="#onLogin"/>
+                        <Label fx:id="loginError" styleClass="error-box" wrapText="true"/>
+                        <Button text="Войти" onAction="#onLogin" styleClass="primary" maxWidth="Infinity" defaultButton="true"/>
+                        <Label text="Администратор входит под единым логином и паролем, заданными в файле .env."
+                               styleClass="muted" wrapText="true"/>
+                    </VBox>
+                </content>
+            </Tab>
+            <Tab text="Регистрация">
+                <content>
+                    <VBox spacing="10">
+                        <padding><Insets top="14" right="4" bottom="4" left="4"/></padding>
+                        <Label text="Логин (3–30 символов: латиница, цифры, _ . -)"/>
+                        <TextField fx:id="regLoginField" promptText="Придумайте логин"/>
+                        <Label text="Пароль (минимум 8 символов, буква и цифра)"/>
+                        <PasswordField fx:id="regPasswordField" promptText="Пароль"/>
+                        <Label text="Повторите пароль"/>
+                        <PasswordField fx:id="regConfirmField" promptText="Пароль ещё раз" onAction="#onRegister"/>
+                        <Label fx:id="regError" styleClass="error-box" wrapText="true"/>
+                        <Button text="Зарегистрироваться" onAction="#onRegister" styleClass="primary" maxWidth="Infinity"/>
+                    </VBox>
+                </content>
+            </Tab>
+        </TabPane>
+    </VBox>
+</VBox>

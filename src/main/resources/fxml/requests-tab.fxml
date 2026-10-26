@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.chart.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="ru.mirea.kinostudio.fx.controller.RequestsController" spacing="10" styleClass="tab-content">
+    <padding><Insets top="14" right="16" bottom="12" left="16"/></padding>
+
+    <!-- Поиск, фильтры, сортировка -->
+    <VBox spacing="8" styleClass="card">
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <TextField fx:id="searchField" HBox.hgrow="ALWAYS"
+                       promptText="Поиск по названию, описанию, клиенту, локации"/>
+            <ComboBox fx:id="sortBox" prefWidth="270"/>
+        </HBox>
+        <HBox spacing="10" alignment="CENTER_LEFT">
+            <Label text="Статус:"/>
+            <ComboBox fx:id="statusFilter" promptText="Все статусы" prefWidth="160"/>
+            <Label text="Локация:"/>
+            <ComboBox fx:id="locationFilter" promptText="Все локации" prefWidth="250"/>
+            <Label text="Дата с:"/>
+            <DatePicker fx:id="fromPicker" promptText="дд.мм.гггг" prefWidth="130"/>
+            <Label text="по:"/>
+            <DatePicker fx:id="toPicker" promptText="дд.мм.гггг" prefWidth="130"/>
+            <Button text="Сбросить" onAction="#onReset" styleClass="ghost"/>
+        </HBox>
+        <Label fx:id="filterHint" styleClass="error-text" visible="false" managed="false"/>
+    </VBox>
+
+    <!-- Кнопки действий -->
+    <HBox spacing="8" alignment="CENTER_LEFT">
+        <Button text="＋ Добавить" onAction="#onAdd" styleClass="primary"/>
+        <Button fx:id="editButton" text="Изменить" onAction="#onEdit"/>
+        <Button fx:id="statusButton" text="Сменить статус" onAction="#onChangeStatus"/>
+        <Button fx:id="deleteButton" text="Удалить" onAction="#onDelete" styleClass="danger"/>
+        <Region HBox.hgrow="ALWAYS"/>
+        <Label fx:id="countLabel" styleClass="muted"/>
+        <Button text="Экспорт…" onAction="#onExport"/>
+    </HBox>
+
+    <TableView fx:id="table" VBox.vgrow="ALWAYS">
+        <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
+        <columns>
+            <TableColumn fx:id="idCol" text="№" minWidth="45" maxWidth="60" styleClass="right"/>
+            <TableColumn fx:id="titleCol" text="Название" minWidth="190"/>
+            <TableColumn fx:id="clientCol" text="Клиент" minWidth="140"/>
+            <TableColumn fx:id="locationCol" text="Локация" minWidth="150"/>
+            <TableColumn fx:id="dateCol" text="Дата съёмки" minWidth="95" maxWidth="115"/>
+            <TableColumn fx:id="durationCol" text="Часов" minWidth="60" maxWidth="75"/>
+            <TableColumn fx:id="budgetCol" text="Бюджет" minWidth="115"/>
+            <TableColumn fx:id="statusCol" text="Статус" minWidth="105"/>
+        </columns>
+    </TableView>
+
+    <!-- Связанные данные выбранной заявки -->
+    <HBox spacing="14" styleClass="card" minHeight="120" prefHeight="125">
+        <VBox spacing="4" HBox.hgrow="ALWAYS" prefWidth="320">
+            <Label fx:id="detailTitle" styleClass="detail-title" wrapText="true"/>
+            <Label fx:id="detailDescription" wrapText="true"/>
+        </VBox>
+        <VBox spacing="4" prefWidth="250">
+            <Label text="Клиент" styleClass="section-caption"/>
+            <Label fx:id="detailClient" wrapText="true"/>
+        </VBox>
+        <VBox spacing="4" prefWidth="280">
+            <Label text="Локация" styleClass="section-caption"/>
+            <Label fx:id="detailLocation" wrapText="true"/>
+        </VBox>
+    </HBox>
+</VBox>
