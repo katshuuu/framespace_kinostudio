@@ -3,10 +3,12 @@ package ru.mirea.framespace.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import ru.mirea.framespace.domain.ShootingRequest;
 import ru.mirea.framespace.domain.RequestStatus;
 
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -16,6 +18,10 @@ public interface ShootingRequestRepository extends JpaRepository<ShootingRequest
     boolean existsByExternalIdIgnoreCase(String externalId);
     boolean existsByExternalIdIgnoreCaseAndIdNot(String externalId, UUID id);
     Optional<ShootingRequest> findByExternalIdIgnoreCase(String externalId);
+    long countByClient_Id(UUID clientId);
+
+    @Query("select s.client.id, count(s) from ShootingRequest s where s.client.id in :clientIds group by s.client.id")
+    List<Object[]> countByClientIds(@Param("clientIds") Collection<UUID> clientIds);
     long countByArchivedFalse();
     long countByArchivedTrue();
     long countByArchivedFalseAndUrgentTrue();

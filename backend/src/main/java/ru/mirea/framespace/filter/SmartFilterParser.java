@@ -29,6 +29,7 @@ public class SmartFilterParser {
     public RequestFilter parse(String source) {
         List<String> free = new ArrayList<>();
         String location = null;
+        String client = null;
         RequestStatus status = null;
         Boolean urgent = null;
         PriorityLevel priority = null;
@@ -37,7 +38,7 @@ public class SmartFilterParser {
         List<RequestFilter.BudgetConstraint> budgets = new ArrayList<>();
 
         if (source == null || source.isBlank()) {
-            return new RequestFilter("", null, null, null, null, null, false, List.of());
+            return new RequestFilter("", null, null, null, null, null, null, false, List.of());
         }
         if (source.length() > 500) throw new BadRequestException("Строка фильтра слишком длинная");
 
@@ -65,6 +66,7 @@ public class SmartFilterParser {
                 String normalized = value.toLowerCase(Locale.ROOT);
                 switch (key) {
                     case "локация", "location" -> location = value;
+                    case "клиент", "client" -> client = value;
                     case "статус", "status" -> status = status(normalized);
                     case "срочно", "urgent" -> urgent = booleanValue(normalized, "срочно");
                     case "приоритет", "priority" -> priority = priority(normalized);
@@ -76,7 +78,7 @@ public class SmartFilterParser {
                 free.add(token);
             }
         }
-        return new RequestFilter(String.join(" ", free), blankToNull(location), status, urgent, priority,
+        return new RequestFilter(String.join(" ", free), blankToNull(location), blankToNull(client), status, urgent, priority,
                 blankToNull(tag), archived, List.copyOf(budgets));
     }
 

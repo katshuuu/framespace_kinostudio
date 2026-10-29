@@ -38,8 +38,9 @@ public class LocationService {
         if (locations.existsByCodeIgnoreCase(code)) throw new ConflictException("Локация с таким кодом уже существует");
         Location location = new Location(UUID.randomUUID(), code, normalizeNullable(request.name()),
                 normalizeNullable(request.address()), request.capacity());
+        if (request.type() != null) location.setType(request.type());
         if (request.active() != null) location.setActive(request.active());
-        locations.save(location);
+        locations.saveAndFlush(location);
         audit.record("LOCATION_CREATED", "LOCATION", location.getId(), "Создана локация " + code, Map.of());
         return toResponse(location);
     }
@@ -57,8 +58,10 @@ public class LocationService {
         location.setName(normalizeNullable(request.name()));
         location.setAddress(normalizeNullable(request.address()));
         location.setCapacity(request.capacity());
+        if (request.type() != null) location.setType(request.type());
         if (request.active() != null) location.setActive(request.active());
         audit.record("LOCATION_UPDATED", "LOCATION", id, "Изменена локация " + code, Map.of());
+        locations.flush();
         return toResponse(location);
     }
 
@@ -69,6 +72,7 @@ public class LocationService {
         location.setActive(active);
         audit.record(active ? "LOCATION_ACTIVATED" : "LOCATION_DEACTIVATED", "LOCATION", id,
                 (active ? "Активирована" : "Деактивирована") + " локация " + location.getCode(), Map.of());
+        locations.flush();
         return toResponse(location);
     }
 
@@ -78,7 +82,7 @@ public class LocationService {
 
     private static LocationResponse toResponse(Location location) {
         return new LocationResponse(location.getId(), location.getCode(), location.getName(), location.getAddress(),
-                location.getCapacity(), location.isActive(), location.getCreatedAt(), location.getUpdatedAt(),
+                location.getCapacity(), location.getType(), location.isActive(), location.getCreatedAt(), location.getUpdatedAt(),
                 location.getVersion());
     }
 

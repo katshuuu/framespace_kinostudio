@@ -46,7 +46,7 @@ public class NoteService {
         ShootingRequest entity = requireRequest(requestId);
         UserAccount actor = currentUser.requireEntity();
         RequestNote note = new RequestNote(UUID.randomUUID(), entity, actor, request.body().trim(), request.pinned());
-        notes.save(note);
+        notes.saveAndFlush(note);
         audit.record("REQUEST_NOTE_CREATED", "REQUEST_NOTE", note.getId(), "Добавлена заметка к заявке",
                 Map.of("requestId", requestId));
         return toResponse(note);
@@ -62,6 +62,7 @@ public class NoteService {
         note.setBody(request.body().trim());
         note.setPinned(request.pinned());
         audit.record("REQUEST_NOTE_UPDATED", "REQUEST_NOTE", noteId, "Изменена заметка", Map.of("requestId", requestId));
+        notes.flush();
         return toResponse(note);
     }
 

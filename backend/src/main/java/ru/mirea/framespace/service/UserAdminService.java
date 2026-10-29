@@ -59,7 +59,7 @@ public class UserAdminService {
         UserAccount user = new UserAccount(UUID.randomUUID(), email, request.displayName().trim(),
                 encoder.encode(request.temporaryPassword()), normalizeRoles(request.roles()));
         user.setPasswordChangeRequired(true);
-        users.save(user);
+        users.saveAndFlush(user);
         audit.record("USER_CREATED", "USER", user.getId(), "Создан пользователь " + email, Map.of("roles", user.getRoles()));
         return toResponse(user);
     }
@@ -83,6 +83,7 @@ public class UserAdminService {
         user.setRoles(roles);
         if (!request.enabled()) sessions.revokeAllForUser(id, Instant.now());
         audit.record("USER_UPDATED", "USER", id, "Изменён пользователь " + email, Map.of("roles", roles, "enabled", request.enabled()));
+        users.flush();
         return toResponse(user);
     }
 

@@ -17,14 +17,18 @@ public class PageableFactory {
             "budget", "budget",
             "priority", "priorityLevel",
             "location", "location.code",
+            "client", "client.fullName",
             "shootingDate", "shootingDate",
             "updated", "updatedAt");
+    private static final Map<String, String> CLIENT_FIELDS = Map.of(
+            "name", "fullName", "email", "email", "created", "createdAt", "updated", "updatedAt");
     private static final Map<String, String> USER_FIELDS = Map.of(
             "email", "email", "name", "displayName", "created", "createdAt", "updated", "updatedAt");
     private static final Map<String, String> AUDIT_FIELDS = Map.of(
             "occurred", "occurredAt", "actor", "actorEmail", "event", "eventType");
 
     public Pageable requests(int page, int size, String sort) { return create(page, size, sort, REQUEST_FIELDS, "title"); }
+    public Pageable clients(int page, int size, String sort) { return create(page, size, sort, CLIENT_FIELDS, "fullName"); }
     public Pageable users(int page, int size, String sort) { return create(page, size, sort, USER_FIELDS, "email"); }
     public Pageable audit(int page, int size, String sort) { return create(page, size, sort, AUDIT_FIELDS, "occurredAt"); }
 

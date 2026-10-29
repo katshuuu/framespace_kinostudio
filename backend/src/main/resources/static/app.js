@@ -8,6 +8,8 @@ const state = {
     accessToken: null,
     user: null,
     locations: [],
+    clientOptions: [],
+    clients: { page: 0, size: 25, totalPages: 0, query: '', content: [] },
     requests: { page: 0, size: 25, totalPages: 0, query: '', content: [] },
     selectedRequestIds: new Set(),
     activeRequestForNotes: null,
@@ -33,9 +35,13 @@ function fieldLabel(value) {
         externalId: 'внешний ID',
         title: 'название',
         description: 'описание',
+        clientId: 'клиент',
         clientName: 'клиент',
         clientEmail: 'email клиента',
         clientPhone: 'телефон клиента',
+        fullName: 'ФИО / название',
+        email: 'email',
+        phone: 'телефон',
         shootingDate: 'дата съёмки',
         locationId: 'локация',
         status: 'статус',
@@ -210,7 +216,7 @@ async function enterApplication() {
     }
 
     try {
-        await Promise.all([loadLocations(), loadDashboard()]);
+        await Promise.all([loadLocations(), loadClientOptions(), loadDashboard()]);
     } catch (error) {
         console.error('[FrameSpace] Initial data loading failed', error);
         toast(`Вход выполнен, но часть данных не загрузилась: ${error.message}`, true);
@@ -228,12 +234,14 @@ function switchTab(name) {
     const titles = {
         dashboard: ['Аналитика', 'Сводная картина по заявкам на съёмку'],
         requests: ['Заявки', 'Умный поиск, карточки и массовые операции'],
+        clients: ['Клиенты', 'Заказчики съёмок'],
         locations: ['Локации', 'Справочник павильонов и площадок'],
         users: ['Пользователи', 'Роли, блокировка и временные пароли'],
         audit: ['Журнал аудита', 'История действий пользователей']
     };
     [$('page-title').textContent, $('page-subtitle').textContent] = titles[name];
     if (name === 'requests') loadRequests();
+    if (name === 'clients') loadClients();
     if (name === 'locations') renderLocations();
     if (name === 'users' && isAdmin()) loadUsers();
     if (name === 'audit' && isAdmin()) loadAudit();
@@ -290,6 +298,7 @@ function renderLocations() {
     body.innerHTML = state.locations.map(location => `<tr>
         <td><strong>${escapeHtml(location.code)}</strong></td>
         <td>${escapeHtml(location.name || '—')}</td>
+        <td>${escapeHtml(locationTypeLabel(location.type))}</td>
         <td>${escapeHtml(location.address || '—')}</td>
         <td>${location.capacity ?? '—'}</td>
         <td><span class="badge ${location.active ? 'success' : ''}">${location.active ? 'Да' : 'Нет'}</span></td>
@@ -339,17 +348,25 @@ function requestForm(request = null, readOnly = false) {
         ...state.locations.filter(l => l.active || l.id === request?.locationId)
             .map(l => `<option value="${l.id}" ${l.id === request?.locationId ? 'selected' : ''}>${escapeHtml(l.code)}</option>`)
     ].join('');
+    const clients = [...state.clientOptions];
+    if (request && !clients.some(c => c.id === request.clientId)) {
+        clients.push({ id: request.clientId, fullName: request.clientName, email: request.clientEmail });
+    }
+    const clientOptions = ['<option value="">Выберите клиента</option>',
+        ...clients.map(c => `<option value="${c.id}" ${c.id === request?.clientId ? 'selected' : ''}>${escapeHtml(c.fullName)} · ${escapeHtml(c.email)}</option>`)
+    ].join('');
+    const statuses = request ? [request.status, ...request.nextStatuses] : ['NEW'];
     return `<div class="dialog-head"><h3>${request ? (readOnly ? 'Карточка заявки' : 'Изменение заявки') : 'Новая заявка'}</h3><button type="button" data-close-dialog="entity-dialog" class="icon-button">×</button></div>
     <div class="form-grid">
       <label>External ID<input name="externalId" maxlength="100" value="${escapeHtml(request?.externalId || '')}" ${readOnly ? 'disabled' : ''}></label>
       <label>Название<input name="title" required maxlength="200" value="${escapeHtml(request?.title || '')}" ${readOnly ? 'disabled' : ''}></label>
       <label class="span-2">Описание<textarea name="description" required maxlength="4000" rows="4" ${readOnly ? 'disabled' : ''}>${escapeHtml(request?.description || '')}</textarea></label>
-      <label>Клиент<input name="clientName" required maxlength="200" value="${escapeHtml(request?.clientName || '')}" ${readOnly ? 'disabled' : ''}></label>
-      <label>Email клиента<input name="clientEmail" type="email" maxlength="254" value="${escapeHtml(request?.clientEmail || '')}" ${readOnly ? 'disabled' : ''}></label>
-      <label>Телефон<input name="clientPhone" type="tel" inputmode="numeric" autocomplete="tel" maxlength="16" pattern="\\+7-[0-9]{3}-[0-9]{3}-[0-9]{2}-[0-9]{2}" title="Формат: +7-999-999-99-99" placeholder="+7-999-999-99-99" value="${escapeHtml(request?.clientPhone ? formatRussianPhone(request.clientPhone) : '')}" ${readOnly ? 'disabled' : ''}></label>
+      <label class="span-2">Клиент<select name="clientId" required ${readOnly ? 'disabled' : ''}>${clientOptions}</select>
+        ${readOnly && request ? `<small class="muted">${escapeHtml(request.clientPhone || '')}</small>` : ''}
+        ${readOnly ? '' : '<small class="muted">Нет нужного клиента? Добавьте его на вкладке «Клиенты».</small>'}</label>
       <label>Дата съёмки<input name="shootingDate" type="date" required value="${request?.shootingDate || ''}" ${readOnly ? 'disabled' : ''}></label>
       <label>Локация<select name="locationId" ${readOnly ? 'disabled' : ''}>${locationOptions}</select></label>
-      <label>Статус<select name="status" ${readOnly ? 'disabled' : ''}>${statusOptions(request?.status)}</select></label>
+      <label>Статус<select name="status" ${readOnly ? 'disabled' : ''}>${statusOptions(request?.status, statuses)}</select></label>
       <label>Бюджет<input name="budget" type="number" min="0" max="99999999.99" step="0.01" inputmode="decimal" placeholder="0.00" value="${request?.budget ?? ''}" ${readOnly ? 'disabled' : ''}></label>
       <label>Длительность (ч)<input name="durationHours" type="number" min="1" step="1" value="${request?.durationHours ?? ''}" ${readOnly ? 'disabled' : ''}></label>
       <label class="inline"><input name="urgent" type="checkbox" ${request?.urgent ? 'checked' : ''} ${readOnly ? 'disabled' : ''}> Срочная заявка</label>
@@ -362,11 +379,6 @@ async function openRequest(id = null, readOnly = false) {
     const request = id ? await api(`/requests/${id}`) : null;
     const form = $('entity-form');
     form.innerHTML = requestForm(request, readOnly);
-
-    const phoneInput = form.elements.clientPhone;
-    if (phoneInput && !readOnly) {
-        bindPhoneMask(phoneInput);
-    }
 
     form.onsubmit = readOnly ? null : async event => {
         event.preventDefault();
@@ -381,9 +393,7 @@ async function openRequest(id = null, readOnly = false) {
             externalId: empty(data.get('externalId')),
             title: data.get('title'),
             description: data.get('description'),
-            clientName: data.get('clientName'),
-            clientEmail: empty(data.get('clientEmail')),
-            clientPhone: empty(data.get('clientPhone')),
+            clientId: data.get('clientId'),
             shootingDate: data.get('shootingDate'),
             locationId: empty(data.get('locationId')),
             status: data.get('status'),
@@ -434,11 +444,12 @@ async function bulkAction() {
     const action = prompt('Действие: ARCHIVE, RESTORE, SET_STATUS, ADD_TAG, REMOVE_TAG', 'ARCHIVE');
     if (!action) return;
     const payload = { ids: [...state.selectedRequestIds], action: action.toUpperCase(), status: null, tag: null };
-    if (payload.action === 'SET_STATUS') payload.status = prompt('Статус: NEW, APPROVED, IN_PROGRESS, COMPLETED, REJECTED, CANCELLED', 'NEW');
+    if (payload.action === 'SET_STATUS') payload.status = prompt('Статус: APPROVED, IN_PROGRESS, COMPLETED, REJECTED, CANCELLED. Заявки, для которых переход недопустим, попадут в отчёт об ошибках.', 'APPROVED');
     if (payload.action === 'ADD_TAG' || payload.action === 'REMOVE_TAG') payload.tag = prompt('Тег');
     try {
         const result = await api('/requests/bulk', { method: 'POST', body: JSON.stringify(payload) });
-        toast(`Успешно: ${result.succeeded}; ошибок: ${result.failures.length}`);
+        toast(`Успешно: ${result.succeeded}; ошибок: ${result.failures.length}`, result.failures.length > 0);
+        if (result.failures.length) console.warn('[FrameSpace] Bulk failures', result.failures);
         await Promise.all([loadRequests(), loadDashboard()]);
     } catch (error) { toast(error.message, true); }
 }
@@ -456,10 +467,90 @@ async function exportCsv() {
     } catch (error) { toast(error.message, true); }
 }
 
+async function loadClientOptions() {
+    const page = await api('/clients?page=0&size=100&sort=name,asc');
+    state.clientOptions = page.content;
+}
+
+async function loadClients(page = state.clients.page) {
+    try {
+        const q = encodeURIComponent(state.clients.query);
+        const result = await api(`/clients?q=${q}&page=${page}&size=${state.clients.size}&sort=name,asc`);
+        state.clients = {...state.clients, ...result};
+        renderClients();
+    } catch (error) { toast(error.message, true); }
+}
+
+function renderClients() {
+    $('clients-body').innerHTML = state.clients.content.map(client => `<tr>
+        <td><strong>${escapeHtml(client.fullName)}</strong></td>
+        <td>${escapeHtml(client.email)}</td>
+        <td>${escapeHtml(client.phone)}</td>
+        <td>${client.requestCount}</td>
+        <td class="operator-only"><div class="actions">
+            <button class="secondary" data-client-edit="${client.id}">Изменить</button>
+            ${isAdmin() ? `<button class="danger-outline" data-client-delete="${client.id}" ${client.requestCount ? 'disabled title="У клиента есть заявки"' : ''}>Удалить</button>` : ''}
+        </div></td>
+    </tr>`).join('') || '<tr><td colspan="5" class="muted">Клиенты не найдены</td></tr>';
+    $('clients-page').textContent = `Страница ${state.clients.page + 1} из ${Math.max(1, state.clients.totalPages)} · записей ${state.clients.totalElements}`;
+    $('clients-prev').disabled = state.clients.first;
+    $('clients-next').disabled = state.clients.last;
+    applyRoleVisibility();
+}
+
+function clientForm(client = null) {
+    return `<div class="dialog-head"><h3>${client ? 'Изменение клиента' : 'Новый клиент'}</h3><button type="button" data-close-dialog="entity-dialog" class="icon-button">×</button></div>
+    <label>ФИО или название организации<input name="fullName" required maxlength="150" value="${escapeHtml(client?.fullName || '')}"></label>
+    <label>Email<input name="email" type="email" required maxlength="254" value="${escapeHtml(client?.email || '')}"></label>
+    <label>Телефон<input name="phone" type="tel" required inputmode="numeric" autocomplete="tel" maxlength="16" pattern="\\+7-[0-9]{3}-[0-9]{3}-[0-9]{2}-[0-9]{2}" title="Формат: +7-999-999-99-99" placeholder="+7-999-999-99-99" value="${escapeHtml(client?.phone || '')}"></label>
+    <div class="form-message error" data-form-error hidden></div>
+    <button class="primary" type="submit">Сохранить</button>`;
+}
+
+async function openClient(id = null) {
+    const client = id ? state.clients.content.find(c => c.id === id) : null;
+    const form = $('entity-form');
+    form.innerHTML = clientForm(client);
+    bindPhoneMask(form.elements.phone);
+    form.onsubmit = async event => {
+        event.preventDefault();
+        clearFormError(form);
+        if (!form.reportValidity()) return;
+        const data = new FormData(form);
+        const payload = {
+            fullName: data.get('fullName'),
+            email: data.get('email'),
+            phone: data.get('phone'),
+            version: client?.version ?? null
+        };
+        try {
+            await api(id ? `/clients/${id}` : '/clients', { method: id ? 'PUT' : 'POST', body: JSON.stringify(payload) });
+            $('entity-dialog').close();
+            toast('Клиент сохранён');
+            await Promise.all([loadClients(), loadClientOptions()]);
+        } catch (error) {
+            showFormError(form, error.message);
+        }
+    };
+    $('entity-dialog').showModal();
+}
+
+async function deleteClient(id) {
+    const client = state.clients.content.find(c => c.id === id);
+    if (!confirm(`Удалить клиента «${client?.fullName}»?`)) return;
+    try {
+        await api(`/clients/${id}`, { method: 'DELETE' });
+        toast('Клиент удалён');
+        await Promise.all([loadClients(), loadClientOptions()]);
+    } catch (error) { toast(error.message, true); }
+}
+
 function locationForm(location = null) {
     return `<div class="dialog-head"><h3>${location ? 'Изменение' : 'Новая'} локация</h3><button type="button" data-close-dialog="entity-dialog" class="icon-button">×</button></div>
     <label>Код<input name="code" required maxlength="50" value="${escapeHtml(location?.code || '')}"></label>
     <label>Название<input name="name" maxlength="200" value="${escapeHtml(location?.name || '')}"></label>
+    <label>Тип<select name="type">${['PAVILION', 'STUDIO', 'OUTDOOR', 'OFFICE'].map(type =>
+        `<option value="${type}" ${type === (location?.type || 'PAVILION') ? 'selected' : ''}>${locationTypeLabel(type)}</option>`).join('')}</select></label>
     <label>Адрес<input name="address" maxlength="500" value="${escapeHtml(location?.address || '')}"></label>
     <label>Вместимость<input name="capacity" type="number" min="1" step="1" value="${location?.capacity ?? ''}"></label>
     <label class="inline"><input name="active" type="checkbox" ${location?.active !== false ? 'checked' : ''}> Активна</label>
@@ -479,6 +570,7 @@ async function openLocation(id = null) {
             name: empty(data.get('name')),
             address: empty(data.get('address')),
             capacity: capacityRaw == null ? null : Number(capacityRaw),
+            type: data.get('type'),
             active: data.get('active') === 'on',
             version: location?.version ?? null
         };
@@ -714,6 +806,20 @@ function bindEvents() {
     $('bulk-action').addEventListener('click', bulkAction);
     $('export-csv').addEventListener('click', exportCsv);
     $('import-csv').addEventListener('click', () => { $('csv-result').textContent = ''; $('csv-apply').disabled = true; $('csv-dialog').showModal(); });
+    $('search-clients').addEventListener('click', () => {
+        state.clients.query = $('client-search').value.trim();
+        loadClients(0);
+    });
+    $('client-search').addEventListener('keydown', event => { if (event.key === 'Enter') $('search-clients').click(); });
+    $('clients-prev').addEventListener('click', () => loadClients(state.clients.page - 1));
+    $('clients-next').addEventListener('click', () => loadClients(state.clients.page + 1));
+    $('add-client').addEventListener('click', () => openClient());
+    $('clients-body').addEventListener('click', event => {
+        const edit = event.target.closest('[data-client-edit]');
+        const remove = event.target.closest('[data-client-delete]');
+        if (edit) openClient(edit.dataset.clientEdit);
+        if (remove) deleteClient(remove.dataset.clientDelete);
+    });
     $('add-location').addEventListener('click', () => openLocation());
     $('add-user').addEventListener('click', () => openUser());
     $('search-audit').addEventListener('click', loadAudit);
@@ -805,8 +911,8 @@ async function runCsv(apply) {
     }
 }
 
-function statusOptions(selected = 'NEW') {
-    return ['NEW', 'APPROVED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED', 'CANCELLED']
+function statusOptions(selected = 'NEW', allowed = ['NEW', 'APPROVED', 'IN_PROGRESS', 'COMPLETED', 'REJECTED', 'CANCELLED']) {
+    return allowed
         .map(v => `<option value="${v}" ${v === selected ? 'selected' : ''}>${statusLabel(v)}</option>`)
         .join('');
 }
@@ -820,6 +926,15 @@ function statusLabel(value) {
         REJECTED: 'Отклонена',
         CANCELLED: 'Отменена'
     })[value] || value;
+}
+
+function locationTypeLabel(value) {
+    return ({
+        PAVILION: 'Павильон',
+        STUDIO: 'Студия',
+        OUTDOOR: 'Натура',
+        OFFICE: 'Офис'
+    })[value] || value || '—';
 }
 
 function priorityLabel(value) {

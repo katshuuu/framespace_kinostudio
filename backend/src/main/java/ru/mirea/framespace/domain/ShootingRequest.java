@@ -40,14 +40,9 @@ public class ShootingRequest extends AuditedVersionedEntity {
     @Column(nullable = false, length = 4000)
     private String description;
 
-    @Column(name = "client_name", nullable = false, length = 200)
-    private String clientName;
-
-    @Column(name = "client_email", length = 254)
-    private String clientEmail;
-
-    @Column(name = "client_phone", length = 32)
-    private String clientPhone;
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "client_id", nullable = false)
+    private Client client;
 
     @Column(name = "shooting_date", nullable = false)
     private LocalDate shootingDate;
@@ -99,10 +94,10 @@ public class ShootingRequest extends AuditedVersionedEntity {
     protected ShootingRequest() {
     }
 
-    public ShootingRequest(UUID id, String title, String clientName, UserAccount creator) {
+    public ShootingRequest(UUID id, String title, Client client, UserAccount creator) {
         this.id = id;
         this.title = title;
-        this.clientName = clientName;
+        this.client = client;
         this.createdBy = creator;
         this.updatedBy = creator;
     }
@@ -114,12 +109,8 @@ public class ShootingRequest extends AuditedVersionedEntity {
     public void setTitle(String title) { this.title = title; }
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-    public String getClientName() { return clientName; }
-    public void setClientName(String clientName) { this.clientName = clientName; }
-    public String getClientEmail() { return clientEmail; }
-    public void setClientEmail(String clientEmail) { this.clientEmail = clientEmail; }
-    public String getClientPhone() { return clientPhone; }
-    public void setClientPhone(String clientPhone) { this.clientPhone = clientPhone; }
+    public Client getClient() { return client; }
+    public void setClient(Client client) { this.client = client; }
     public LocalDate getShootingDate() { return shootingDate; }
     public void setShootingDate(LocalDate shootingDate) { this.shootingDate = shootingDate; }
     public Location getLocation() { return location; }
@@ -144,5 +135,12 @@ public class ShootingRequest extends AuditedVersionedEntity {
     public UserAccount getUpdatedBy() { return updatedBy; }
     public void setUpdatedBy(UserAccount updatedBy) { this.updatedBy = updatedBy; }
     public Set<String> getTags() { return tags; }
-    public void setTags(Set<String> tags) { this.tags = new LinkedHashSet<>(tags); }
+    /**
+     * Коллекция меняется на месте: замена ссылки заставляет Hibernate пересоздать теги
+     * и поднять version даже без фактических изменений.
+     */
+    public void setTags(Set<String> tags) {
+        this.tags.retainAll(tags);
+        this.tags.addAll(tags);
+    }
 }

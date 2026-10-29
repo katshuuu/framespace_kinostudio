@@ -2,11 +2,9 @@ package ru.mirea.framespace.dto;
 
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import ru.mirea.framespace.domain.PriorityLevel;
 import ru.mirea.framespace.domain.RequestStatus;
@@ -28,9 +26,7 @@ public final class RequestDtos {
             @Size(max = 100) String externalId,
             @NotBlank @Size(max = 200) String title,
             @NotBlank @Size(max = 4000) String description,
-            @NotBlank @Size(max = 200) String clientName,
-            @Email @Size(max = 254) String clientEmail,
-            @Pattern(regexp = "^\\+7-\\d{3}-\\d{3}-\\d{2}-\\d{2}$", message = "некорректный телефон") String clientPhone,
+            @NotNull UUID clientId,
             @NotNull LocalDate shootingDate,
             UUID locationId,
             @NotNull RequestStatus status,
@@ -39,6 +35,11 @@ public final class RequestDtos {
             boolean urgent,
             @Size(max = 20) Set<@NotBlank @Size(max = 50) String> tags,
             Long version) {
+
+        public RequestUpsert withClientId(UUID id) {
+            return new RequestUpsert(externalId, title, description, id, shootingDate, locationId, status,
+                    budget, durationHours, urgent, tags, version);
+        }
     }
 
     /** Выходная карточка заявки. */
@@ -47,6 +48,7 @@ public final class RequestDtos {
             String externalId,
             String title,
             String description,
+            UUID clientId,
             String clientName,
             String clientEmail,
             String clientPhone,
@@ -54,6 +56,7 @@ public final class RequestDtos {
             UUID locationId,
             String locationCode,
             RequestStatus status,
+            Set<RequestStatus> nextStatuses,
             BigDecimal budget,
             Integer durationHours,
             boolean urgent,

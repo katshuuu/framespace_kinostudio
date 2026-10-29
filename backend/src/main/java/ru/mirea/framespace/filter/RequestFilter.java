@@ -10,6 +10,7 @@ import java.util.List;
 public record RequestFilter(
         String freeText,
         String location,
+        String client,
         RequestStatus status,
         Boolean urgent,
         PriorityLevel priority,

@@ -6,7 +6,7 @@
     <meta name="description" content="FrameSpace — информационная система киностудии, заявки на съёмку">
     <title>FrameSpace</title>
     <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="/styles.css?v=framespace-v1">
+    <link rel="stylesheet" href="/styles.css?v=framespace-v2">
 </head>
 <body>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -33,6 +33,7 @@
         <nav id="navigation">
             <button data-tab="dashboard" class="nav-item active">Аналитика</button>
             <button data-tab="requests" class="nav-item">Заявки</button>
+            <button data-tab="clients" class="nav-item">Клиенты</button>
             <button data-tab="locations" class="nav-item">Локации</button>
             <button data-tab="users" class="nav-item admin-only">Пользователи</button>
             <button data-tab="audit" class="nav-item admin-only">Аудит</button>
@@ -73,7 +74,7 @@
             <div class="toolbar card">
                 <div class="search-wrap">
                     <input id="request-search" type="search" maxlength="500"
-                           placeholder="Реклама локация:PAV-1 статус:новая срочно:да бюджет>=200000 приоритет:высокий тег:клип архив:все">
+                           placeholder="Реклама клиент:петров локация:PAV-1 статус:новая срочно:да бюджет>=200000 приоритет:высокий тег:клип архив:все">
                     <button id="search-requests" class="primary">Найти</button>
                 </div>
                 <div class="toolbar-actions operator-only">
@@ -84,7 +85,8 @@
                 </div>
                 <details class="filter-help">
                     <summary>Подсказка по умному фильтру</summary>
-                    <code>локация:PAV-1 статус:новая срочно:да бюджет&gt;=200000 приоритет:высокий тег:клип архив:все</code>
+                    <code>клиент:петров локация:PAV-1 статус:новая срочно:да бюджет&gt;=200000 приоритет:высокий тег:клип архив:все</code>
+                    <p class="muted">Статусы меняются по графу: Новая → Утверждена или Отклонена; Утверждена → В работе или Отменена; В работе → Завершена или Отменена. Завершённая, отклонённая и отменённая заявки — конечные.</p>
                 </details>
             </div>
             <div class="card table-card">
@@ -105,13 +107,36 @@
             </div>
         </section>
 
+        <section id="tab-clients" class="tab">
+            <div class="toolbar card">
+                <div class="search-wrap">
+                    <input id="client-search" type="search" maxlength="200" placeholder="ФИО или название, email, телефон">
+                    <button id="search-clients" class="primary">Найти</button>
+                </div>
+                <div class="toolbar-actions operator-only">
+                    <button id="add-client" class="primary">+ Клиент</button>
+                </div>
+            </div>
+            <div class="card table-card">
+                <div class="table-scroll"><table>
+                    <thead><tr><th>ФИО / название</th><th>Email</th><th>Телефон</th><th>Заявок</th><th class="operator-only">Действия</th></tr></thead>
+                    <tbody id="clients-body"></tbody>
+                </table></div>
+                <div class="pager">
+                    <button id="clients-prev" class="secondary">←</button>
+                    <span id="clients-page"></span>
+                    <button id="clients-next" class="secondary">→</button>
+                </div>
+            </div>
+        </section>
+
         <section id="tab-locations" class="tab">
             <div class="toolbar card">
                 <p>Локации используются всеми клиентами и проверяются сервером.</p>
                 <button id="add-location" class="primary admin-only">+ Локация</button>
             </div>
             <div class="card table-card"><div class="table-scroll"><table>
-                <thead><tr><th>Код</th><th>Название</th><th>Адрес</th><th>Вместимость</th><th>Активна</th><th class="admin-only">Действия</th></tr></thead>
+                <thead><tr><th>Код</th><th>Название</th><th>Тип</th><th>Адрес</th><th>Вместимость</th><th>Активна</th><th class="admin-only">Действия</th></tr></thead>
                 <tbody id="locations-body"></tbody>
             </table></div></div>
         </section>
@@ -140,6 +165,6 @@
 <dialog id="entity-dialog"><form id="entity-form" method="dialog" class="dialog-form"></form></dialog>
 <dialog id="notes-dialog"><div class="dialog-form wide"><div class="dialog-head"><h3>Заметки</h3><button data-close-dialog="notes-dialog" class="icon-button">×</button></div><div id="notes-list"></div><form id="note-form"><textarea id="note-body" maxlength="4000" required placeholder="Текст заметки"></textarea><label class="inline"><input id="note-pinned" type="checkbox"> Закрепить</label><button class="primary">Добавить заметку</button></form></div></dialog>
 <dialog id="csv-dialog"><div class="dialog-form wide"><div class="dialog-head"><h3>Импорт CSV</h3><button data-close-dialog="csv-dialog" class="icon-button">×</button></div><input id="csv-file" type="file" accept=".csv,text/csv"><label>Режим<select id="csv-mode"><option value="CREATE_ONLY">Только новые</option><option value="UPSERT_BY_EXTERNAL_ID">Обновить по externalId</option></select></label><div class="button-row"><button id="csv-preview" class="secondary">Проверить</button><button id="csv-apply" class="primary" disabled>Применить</button></div><pre id="csv-result" class="result-box"></pre></div></dialog>
-<script src="/app.js?v=framespace-v1" defer></script>
+<script src="/app.js?v=framespace-v2" defer></script>
 </body>
 </html>

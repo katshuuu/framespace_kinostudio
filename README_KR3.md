@@ -15,6 +15,34 @@ Spring Boot REST API для информационной системы кино
 | StudentNote | RequestNote |
 | student_tag | request_tag |
 | TEACHER | OPERATOR |
+| — | Client (клиент — заказчик съёмки, таблица `clients` из КР №1) |
+
+## Связь с КР №1 и КР №2
+
+- Схема повторяет модель КР №1: клиенты (`client`), локации с типом (`PAVILION`, `STUDIO`, `OUTDOOR`, `OFFICE`), заявки со ссылками на клиента и локацию.
+- Тестовые данные КР №1 (5 клиентов, 8 локаций, 10 заявок) загружает миграция `V3__kr1_seed_data.sql`; у заявок `externalId` `KR1-001` … `KR1-010`.
+- Бизнес-правила КР №2 перенесены на сервер:
+  - новая заявка создаётся только в статусе `NEW`;
+  - дата съёмки не может быть в прошлом (проверяется при создании и при изменении даты);
+  - клиент и локация должны существовать;
+  - статус меняется только по графу:
+
+```
+NEW → APPROVED | REJECTED
+APPROVED → IN_PROGRESS | CANCELLED
+IN_PROGRESS → COMPLETED | CANCELLED
+COMPLETED, REJECTED, CANCELLED — конечные
+```
+
+Недопустимый переход возвращает 409. В карточке заявки поле `nextStatuses` перечисляет допустимые следующие статусы.
+
+## Миграции Flyway
+
+| Версия | Что делает |
+|---|---|
+| `V1__initial_schema.sql` | Пользователи, refresh-сессии, локации, заявки, теги, заметки, аудит |
+| `V2__clients_and_location_type.sql` | Таблица `client`, перенос клиентов из уже существующих заявок, `client_id` в заявке, тип локации, `CHECK` на статус и вместимость |
+| `V3__kr1_seed_data.sql` | Данные КР №1; повторный запуск не затирает записи, созданные вручную |
 
 ## Требования
 
@@ -69,6 +97,7 @@ docker compose --env-file .env -f backend/docker-compose.yml up -d --wait
 
 - `POST /api/auth/login`, `/refresh`, `/logout`, `GET /api/auth/me`
 - `GET|POST|PUT|DELETE /api/requests` — заявки, архив, restore, permanent, bulk, CSV
+- `GET|POST|PUT|DELETE /api/clients` — клиенты; удалить можно только клиента без заявок (ADMIN)
 - `GET|POST|PUT /api/locations` — справочник локаций
 - `GET /api/analytics/summary`
 - `GET /api/admin/users`, `GET /api/admin/audit`
@@ -79,7 +108,7 @@ docker compose --env-file .env -f backend/docker-compose.yml up -d --wait
 cd backend && mvn test
 ```
 
-Покрыты: smoke Spring Context, расчёт приоритета, умный фильтр, политика паролей.
+Покрыты: smoke Spring Context, расчёт приоритета, граф статусов, умный фильтр, политика паролей, совпадение версии в ответе и в базе.
 
 ## Структура `backend/`
 

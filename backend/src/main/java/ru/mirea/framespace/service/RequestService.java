@@ -25,7 +25,9 @@ import ru.mirea.framespace.repository.ShootingRequestRepository;
 import ru.mirea.framespace.repository.LocationRepository;
 import ru.mirea.framespace.security.CurrentUserService;
 
+import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.Locale;
@@ -44,13 +46,17 @@ public class RequestService {
     private final PriorityCalculator priorityCalculator;
     private final AuditService audit;
     private final AppProperties properties;
+    private final ClientService clients;
+    private final Clock clock;
 
     public RequestService(ShootingRequestRepository requests, LocationRepository locations,
                           CurrentUserService currentUser, SmartFilterParser parser, RequestMapper mapper,
                           PriorityCalculator priorityCalculator, AuditService audit,
-                          AppProperties properties) {
+                          AppProperties properties, ClientService clients, Clock clock) {
         this.requests = requests;
         this.locations = locations;
+        this.clients = clients;
+        this.clock = clock;
         this.currentUser = currentUser;
         this.parser = parser;
         this.mapper = mapper;
@@ -72,15 +78,13 @@ public class RequestService {
         return mapper.toResponse(require(id));
     }
 
-    /** Создаёт заявку и рассчитывает приоритет на сервере. */
+    /** Создаёт заявку в статусе NEW и рассчитывает приоритет на сервере. */
     @Transactional
     public RequestResponse create(RequestUpsert request) {
         UserAccount actor = currentUser.requireEntity();
         validateExternalId(request.externalId(), null);
-        ShootingRequest entity = new ShootingRequest(UUID.randomUUID(), normalizeRequired(request.title()),
-                normalizeRequired(request.clientName()), actor);
-        apply(entity, request, actor);
-        requests.save(entity);
+        ShootingRequest entity = newEntity(request, actor);
+        requests.saveAndFlush(entity);
         audit.record("REQUEST_CREATED", "REQUEST", entity.getId(),
                 "Создана заявка " + displayName(entity), Map.of());
         return mapper.toResponse(entity);
@@ -96,6 +100,7 @@ public class RequestService {
         apply(entity, request, actor);
         audit.record("REQUEST_UPDATED", "REQUEST", id,
                 "Изменена заявка " + displayName(entity), Map.of("version", entity.getVersion()));
+        requests.flush();
         return mapper.toResponse(entity);
     }
 
@@ -106,6 +111,7 @@ public class RequestService {
         archiveInternal(entity, currentUser.requireEntity());
         audit.record("REQUEST_ARCHIVED", "REQUEST", id,
                 "Заявка перемещена в архив", Map.of());
+        requests.flush();
         return mapper.toResponse(entity);
     }
 
@@ -119,6 +125,7 @@ public class RequestService {
         entity.setUpdatedBy(currentUser.requireEntity());
         audit.record("REQUEST_RESTORED", "REQUEST", id,
                 "Заявка восстановлена из архива", Map.of());
+        requests.flush();
         return mapper.toResponse(entity);
     }
 
@@ -168,22 +175,37 @@ public class RequestService {
     /** Используется CSV-сервисом внутри транзакции без дублирования правил. */
     ShootingRequest upsertFromImport(ShootingRequest existing, RequestUpsert request, UserAccount actor) {
         if (existing == null) {
-            ShootingRequest created = new ShootingRequest(UUID.randomUUID(), normalizeRequired(request.title()),
-                    normalizeRequired(request.clientName()), actor);
-            apply(created, request, actor);
-            return requests.save(created);
+            return requests.save(newEntity(request, actor));
         }
         apply(existing, request, actor);
         return existing;
     }
 
+    private ShootingRequest newEntity(RequestUpsert request, UserAccount actor) {
+        if (request.status() != RequestStatus.NEW) {
+            throw new BadRequestException("Новая заявка создаётся только в статусе «Новая»");
+        }
+        ShootingRequest entity = new ShootingRequest(UUID.randomUUID(), normalizeRequired(request.title()),
+                clients.requireForRequest(request.clientId()), actor);
+        apply(entity, request, actor);
+        return entity;
+    }
+
+    /**
+     * Общие правила создания и изменения. Дата проверяется только при создании и при её
+     * изменении, чтобы прошедшую съёмку можно было довести до конечного статуса.
+     */
     private void apply(ShootingRequest entity, RequestUpsert request, UserAccount actor) {
+        boolean creating = entity.getCreatedAt() == null;
+        if ((creating || !request.shootingDate().equals(entity.getShootingDate()))
+                && request.shootingDate().isBefore(LocalDate.now(clock))) {
+            throw new BadRequestException("Дата съёмки не может быть в прошлом");
+        }
+        if (!creating) changeStatus(entity, request.status());
         entity.setExternalId(normalizeNullable(request.externalId()));
         entity.setTitle(normalizeRequired(request.title()));
         entity.setDescription(normalizeRequired(request.description()));
-        entity.setClientName(normalizeRequired(request.clientName()));
-        entity.setClientEmail(normalizeEmail(request.clientEmail()));
-        entity.setClientPhone(normalizeNullable(request.clientPhone()));
+        entity.setClient(clients.requireForRequest(request.clientId()));
         entity.setShootingDate(request.shootingDate());
         entity.setLocation(resolveLocation(request.locationId()));
         entity.setStatus(request.status());
@@ -206,7 +228,7 @@ public class RequestService {
                 entity.setUpdatedBy(actor);
             }
             case SET_STATUS -> {
-                entity.setStatus(request.status());
+                changeStatus(entity, request.status());
                 entity.setPriorityLevel(priorityCalculator.calculate(
                         entity.getStatus(), entity.getBudget(), entity.getDurationHours(), entity.isUrgent()));
                 entity.setUpdatedBy(actor);
@@ -234,6 +256,15 @@ public class RequestService {
                 && (request.tag() == null || request.tag().isBlank())) {
             throw new BadRequestException("Для операции с тегом требуется tag");
         }
+    }
+
+    private static void changeStatus(ShootingRequest entity, RequestStatus target) {
+        RequestStatus current = entity.getStatus();
+        if (!current.canMoveTo(target)) {
+            throw new ConflictException("Недопустимый переход статуса: " + current + " → " + target
+                    + (current.isFinal() ? " (статус конечный)" : ". Допустимо: " + current.nextStatuses()));
+        }
+        entity.setStatus(target);
     }
 
     private static void archiveInternal(ShootingRequest entity, UserAccount actor) {
@@ -280,11 +311,6 @@ public class RequestService {
         String normalized = normalizeRequired(value).toLowerCase(Locale.ROOT);
         if (normalized.length() > 50) throw new BadRequestException("Тег длиннее 50 символов");
         return normalized;
-    }
-
-    private static String normalizeEmail(String value) {
-        String normalized = normalizeNullable(value);
-        return normalized == null ? null : normalized.toLowerCase(Locale.ROOT);
     }
 
     private static String normalizeRequired(String value) {

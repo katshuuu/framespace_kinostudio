@@ -2,6 +2,8 @@ package ru.mirea.framespace.domain;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
@@ -24,6 +26,10 @@ public class Location extends AuditedVersionedEntity {
     private String address;
 
     private Integer capacity;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private LocationType type = LocationType.PAVILION;
 
     @Column(nullable = false)
     private boolean active = true;
@@ -48,6 +54,8 @@ public class Location extends AuditedVersionedEntity {
     public void setAddress(String address) { this.address = address; }
     public Integer getCapacity() { return capacity; }
     public void setCapacity(Integer capacity) { this.capacity = capacity; }
+    public LocationType getType() { return type; }
+    public void setType(LocationType type) { this.type = type; }
     public boolean isActive() { return active; }
     public void setActive(boolean active) { this.active = active; }
 }

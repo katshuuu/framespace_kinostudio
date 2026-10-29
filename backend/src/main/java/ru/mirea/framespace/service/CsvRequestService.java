@@ -12,10 +12,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import ru.mirea.framespace.config.AppProperties;
+import ru.mirea.framespace.domain.Client;
 import ru.mirea.framespace.domain.ShootingRequest;
 import ru.mirea.framespace.domain.RequestStatus;
 import ru.mirea.framespace.domain.Location;
 import ru.mirea.framespace.domain.UserAccount;
+import ru.mirea.framespace.dto.ClientDtos.ClientUpsert;
 import ru.mirea.framespace.dto.ImportDtos.ImportMode;
 import ru.mirea.framespace.dto.ImportDtos.ImportPreview;
 import ru.mirea.framespace.dto.ImportDtos.ImportResult;
@@ -25,6 +27,7 @@ import ru.mirea.framespace.dto.RequestDtos.RequestResponse;
 import ru.mirea.framespace.error.BadRequestException;
 import ru.mirea.framespace.filter.SmartFilterParser;
 import ru.mirea.framespace.filter.RequestSpecifications;
+import ru.mirea.framespace.repository.ClientRepository;
 import ru.mirea.framespace.repository.ShootingRequestRepository;
 import ru.mirea.framespace.repository.LocationRepository;
 import ru.mirea.framespace.security.CurrentUserService;
@@ -38,6 +41,7 @@ import java.io.Reader;
 import java.io.Writer;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -63,6 +67,8 @@ public class CsvRequestService {
 
     private final ShootingRequestRepository requests;
     private final LocationRepository locations;
+    private final ClientRepository clients;
+    private final ClientService clientService;
     private final RequestService requestService;
     private final CurrentUserService currentUser;
     private final SmartFilterParser parser;
@@ -70,13 +76,18 @@ public class CsvRequestService {
     private final Validator validator;
     private final AppProperties properties;
     private final AuditService audit;
+    private final Clock clock;
 
     public CsvRequestService(ShootingRequestRepository requests, LocationRepository locations,
+                             ClientRepository clients, ClientService clientService,
                              RequestService requestService, CurrentUserService currentUser,
                              SmartFilterParser parser, RequestMapper mapper, Validator validator,
-                             AppProperties properties, AuditService audit) {
+                             AppProperties properties, AuditService audit, Clock clock) {
         this.requests = requests;
         this.locations = locations;
+        this.clients = clients;
+        this.clientService = clientService;
+        this.clock = clock;
         this.requestService = requestService;
         this.currentUser = currentUser;
         this.parser = parser;
@@ -112,7 +123,9 @@ public class CsvRequestService {
                     skipped++;
                     continue;
                 }
-                requestService.upsertFromImport(existing, row.request(), actor);
+                RequestUpsert request = row.newClient() == null ? row.request()
+                        : row.request().withClientId(clientService.findOrCreateForImport(row.newClient()).getId());
+                requestService.upsertFromImport(existing, request, actor);
                 if (existing == null) created++; else updated++;
             } catch (RuntimeException ex) {
                 runtimeIssues.add(new RowIssue(row.rowNumber(), "row", safeMessage(ex)));
@@ -165,7 +178,7 @@ public class CsvRequestService {
                 .setTrim(true)
                 .get();
         try (Reader reader = new BufferedReader(new InputStreamReader(file.getInputStream(), StandardCharsets.UTF_8));
-             CSVParser csv = CSVParser.parse(reader, format)) {
+             CSVParser csv = CSVParser.parse(skipBom(reader), format)) {
             validateHeaders(csv.getHeaderMap());
             for (CSVRecord record : csv) {
                 total++;
@@ -175,11 +188,24 @@ public class CsvRequestService {
                 }
                 try {
                     ParsedRow row = toRow(record, rowNumber);
-                    Set<ConstraintViolation<RequestUpsert>> violations = validator.validate(row.request());
-                    if (!violations.isEmpty()) {
-                        for (ConstraintViolation<RequestUpsert> violation : violations) {
-                            issues.add(new RowIssue(rowNumber, violation.getPropertyPath().toString(), violation.getMessage()));
+                    List<RowIssue> rowIssues = new ArrayList<>();
+                    for (ConstraintViolation<RequestUpsert> violation : validator.validate(row.request())) {
+                        String field = violation.getPropertyPath().toString();
+                        if (row.newClient() != null && field.equals("clientId")) continue;
+                        rowIssues.add(new RowIssue(rowNumber, field, violation.getMessage()));
+                    }
+                    if (row.newClient() != null) {
+                        for (ConstraintViolation<ClientUpsert> violation : validator.validate(row.newClient())) {
+                            rowIssues.add(new RowIssue(rowNumber, clientColumn(violation.getPropertyPath().toString()),
+                                    violation.getMessage()));
                         }
+                    }
+                    if (rowIssues.isEmpty()) {
+                        String businessIssue = businessIssue(row.request());
+                        if (businessIssue != null) rowIssues.add(new RowIssue(rowNumber, "status", businessIssue));
+                    }
+                    if (!rowIssues.isEmpty()) {
+                        issues.addAll(rowIssues);
                         continue;
                     }
                     String key = row.request().externalId().toLowerCase(Locale.ROOT);
@@ -211,13 +237,16 @@ public class CsvRequestService {
                 .orElseThrow(() -> new BadRequestException("Локация не найдена: " + locationCode));
         if (location != null && !location.isActive()) throw new BadRequestException("Локация неактивна: " + locationCode);
 
+        String clientEmail = required(record, "clientEmail");
+        Client existingClient = clients.findByEmailIgnoreCase(clientEmail.trim()).orElse(null);
+        ClientUpsert newClient = existingClient != null ? null : new ClientUpsert(
+                required(record, "clientName"), clientEmail, required(record, "clientPhone"), null);
+
         RequestUpsert request = new RequestUpsert(
                 externalId,
                 required(record, "title"),
                 required(record, "description"),
-                required(record, "clientName"),
-                nullable(record, "clientEmail"),
-                nullable(record, "clientPhone"),
+                existingClient == null ? null : existingClient.getId(),
                 parseDate(required(record, "shootingDate")),
                 location == null ? null : location.getId(),
                 parseStatus(required(record, "status")),
@@ -226,7 +255,41 @@ public class CsvRequestService {
                 parseBoolean(nullable(record, "urgent")),
                 parseTags(nullable(record, "tags")),
                 null);
-        return new ParsedRow(rowNumber, request);
+        return new ParsedRow(rowNumber, request, newClient);
+    }
+
+    /** Те же правила статуса и даты, что проверит RequestService, но без записи в базу. */
+    private String businessIssue(RequestUpsert request) {
+        ShootingRequest existing = requests.findByExternalIdIgnoreCase(request.externalId()).orElse(null);
+        boolean pastDate = request.shootingDate().isBefore(LocalDate.now(clock));
+        if (existing == null) {
+            if (request.status() != RequestStatus.NEW) return "Новая заявка создаётся только в статусе «Новая»";
+            if (pastDate) return "Дата съёмки не может быть в прошлом";
+            return null;
+        }
+        if (!existing.getStatus().canMoveTo(request.status())) {
+            return "Недопустимый переход статуса: " + existing.getStatus() + " → " + request.status();
+        }
+        if (pastDate && !request.shootingDate().equals(existing.getShootingDate())) {
+            return "Дата съёмки не может быть в прошлом";
+        }
+        return null;
+    }
+
+    private static String clientColumn(String field) {
+        return switch (field) {
+            case "fullName" -> "clientName";
+            case "email" -> "clientEmail";
+            case "phone" -> "clientPhone";
+            default -> field;
+        };
+    }
+
+    /** Экспорт и Excel пишут BOM; без пропуска первая колонка читается как "\ufeffexternalId". */
+    private static Reader skipBom(Reader reader) throws IOException {
+        reader.mark(1);
+        if (reader.read() != '\ufeff') reader.reset();
+        return reader;
     }
 
     private static void validateHeaders(Map<String, Integer> actual) {
@@ -245,6 +308,9 @@ public class CsvRequestService {
         String value = record.get(field);
         if (value == null) return null;
         value = value.replace("\ufeff", "").trim();
+        if (value.length() > 1 && value.charAt(0) == '\'' && "=+-@".indexOf(value.charAt(1)) >= 0) {
+            value = value.substring(1);
+        }
         return value.isEmpty() ? null : value;
     }
 
@@ -313,6 +379,6 @@ public class CsvRequestService {
         return message == null || message.isBlank() ? "Некорректная строка" : message;
     }
 
-    private record ParsedRow(long rowNumber, RequestUpsert request) { }
+    private record ParsedRow(long rowNumber, RequestUpsert request, ClientUpsert newClient) { }
     private record ParsedFile(int totalRows, List<ParsedRow> rows, List<RowIssue> issues) { }
 }
