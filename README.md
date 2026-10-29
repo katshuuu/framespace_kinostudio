@@ -2,15 +2,40 @@
 
 Информационная система для учёта заявок на съёмку в киностудии. Хранит клиентов, локации (павильоны и площадки) и заявки на съёмку, помогает искать, фильтровать и анализировать их.
 
-Проект развивался в два этапа на одной базе данных PostgreSQL:
+Проект развивался поэтапно:
 
-| Этап | Интерфейс | Описание |
-|---|---|---|
-| КР №1 | Консольное меню | CRUD, поиск, фильтры, статистика, экспорт в Excel |
-| КР №2 | Десктопное приложение JavaFX | Вход и регистрация, роли, таблицы, диалоги, графики, экспорт .xlsx / .csv |
-| КР №3 | Spring Boot REST backend | JWT, PostgreSQL + Flyway, Docker Compose, Swagger, web UI — см. `README_KR3.md` |
+| Этап | Ветка | Интерфейс | Описание |
+|---|---|---|---|
+| КР №1 / №2 | `main`, `kr2-javafx` | Консоль + JavaFX | CRUD, роли, графики, экспорт — см. `README_KR2.md` |
+| КР №3 | **`kr3`** | Spring Boot REST | JWT, PostgreSQL + Flyway, Docker Compose, Swagger, web UI — см. `README_KR3.md` |
 
-КР №1 и КР №2 используют одни и те же слои `service` и `repository`. Backend КР №3 лежит в каталоге `backend/` и предоставляет REST API для Android (КР №4).
+КР №1 и КР №2 используют слои `service` и `repository` в корне проекта. Backend КР №3 лежит в каталоге `backend/` и предоставляет REST API (в том числе для Android в КР №4).
+
+## КР №3 — проверка преподавателем
+
+Актуальный код третьей контрольной в отдельной ветке **`kr3`** (зеркало: `spo/kr3-spring-backend`).
+
+```bash
+git clone https://github.com/katshuuu/framespace_kinostudio.git
+cd framespace_kinostudio
+git checkout kr3
+
+cp .env.example .env
+# .env.example уже содержит рабочие значения для локальной проверки
+
+./backend/start-compose.sh
+```
+
+Нужны Docker Desktop и доступ в интернет (сборка Maven-образа). После старта:
+
+| Что | Адрес |
+|---|---|
+| Web UI | http://localhost:8080/ |
+| Swagger | http://localhost:8080/swagger-ui.html |
+| Health | http://localhost:8080/actuator/health |
+
+Вход: `admin@example.org` / `DemoPassw0rd!x` (после первого входа система попросит сменить пароль).  
+Подробности, API и тесты: [README_KR3.md](README_KR3.md). Материалы защиты: `docs/defense-kr3.pdf`, текст устной защиты: `docs/defense-speech-kr3.pdf`.
 
 ## Возможности
 

@@ -1,8 +1,25 @@
 # КР №3 — FrameSpace backend (Spring Boot)
 
-Spring Boot REST API для информационной системы киностудии: заявки на съёмку, локации, JWT, PostgreSQL, Flyway, Docker Compose и web-интерфейс для проверки.
+Spring Boot REST API для информационной системы киностудии: заявки на съёмку, клиенты, локации, JWT, PostgreSQL, Flyway, Docker Compose и web-интерфейс для проверки.
 
 Предметная область продолжается с КР №1/КР №2. JavaFX-клиент остаётся отдельным; этот backend даёт API для Android (КР №4).
+
+## Ветка для проверки
+
+Код КР №3 лежит в ветках **`kr3`** и `spo/kr3-spring-backend` репозитория  
+https://github.com/katshuuu/framespace_kinostudio
+
+```bash
+git clone https://github.com/katshuuu/framespace_kinostudio.git
+cd framespace_kinostudio
+git checkout kr3
+cp .env.example .env
+./backend/start-compose.sh
+```
+
+После запуска откройте http://localhost:8080/  
+Логин: `admin@example.org`, пароль: `DemoPassw0rd!x` (потребуется смена пароля).  
+В базе уже есть данные КР №1 (миграция `V3__kr1_seed_data.sql`): 5 клиентов, 8 локаций, 10 заявок `KR1-001`…`KR1-010`.
 
 ## Соответствие Student Hub → FrameSpace
 
