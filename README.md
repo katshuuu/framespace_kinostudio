@@ -8,8 +8,9 @@
 |---|---|---|
 | КР №1 | Консольное меню | CRUD, поиск, фильтры, статистика, экспорт в Excel |
 | КР №2 | Десктопное приложение JavaFX | Вход и регистрация, роли, таблицы, диалоги, графики, экспорт .xlsx / .csv |
+| КР №3 | Spring Boot REST backend | JWT, PostgreSQL + Flyway, Docker Compose, Swagger, web UI — см. `README_KR3.md` |
 
-Оба интерфейса используют одни и те же слои `service` и `repository`.
+КР №1 и КР №2 используют одни и те же слои `service` и `repository`. Backend КР №3 лежит в каталоге `backend/` и предоставляет REST API для Android (КР №4).
 
 ## Возможности
 

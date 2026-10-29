@@ -19,6 +19,9 @@ dependency-reduced-pom.xml
 # Logs & env
 *.log
 .env
+.env.*
+!.env.example
+!.env.javafx.example
 .env.local
 _to_delete/
 
