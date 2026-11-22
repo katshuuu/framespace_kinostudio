@@ -1,0 +1,28 @@
+HTTP/1.1 200 
+Server: nginx
+Date: Sun, 22 Nov 2026 18:20:52 GMT
+Content-Type: text/html;charset=UTF-8
+Content-Length: 10905
+Connection: keep-alive
+X-Correlation-ID: 25e94d38-ef4d-4810-b9f9-b25e7c9f248d
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Cache-Control: no-store
+Last-Modified: Sun, 22 Nov 2026 18:14:41 GMT
+Accept-Ranges: bytes
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Strict-Transport-Security: max-age=31536000 ; includeSubDomains
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=()
+Content-Language: en-US
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+X-Content-Type-Options: nosniff
+X-Frame-Options: DENY
+Referrer-Policy: no-referrer
+Permissions-Policy: geolocation=(), microphone=(), camera=()
+Content-Security-Policy: default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'
+

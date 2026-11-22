@@ -1,0 +1,20 @@
+HTTP/1.1 200 
+X-Correlation-ID: 703928ee-1411-4072-a642-14fbe31e0db1
+Vary: Origin
+Vary: Access-Control-Request-Method
+Vary: Access-Control-Request-Headers
+Set-Cookie: framespace_refresh=REDACTED; Path=/api/auth; Max-Age=1209599; Expires=Sun, 06 Dec 2026 18:20:51 GMT; HttpOnly; SameSite=Strict
+Set-Cookie: framespace_swagger=REDACTED; Path=/; Max-Age=899; Expires=Sun, 22 Nov 2026 18:35:51 GMT; HttpOnly; SameSite=Strict
+X-Content-Type-Options: nosniff
+X-XSS-Protection: 0
+Cache-Control: no-cache, no-store, max-age=0, must-revalidate
+Pragma: no-cache
+Expires: 0
+X-Frame-Options: DENY
+Content-Security-Policy: default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'
+Referrer-Policy: strict-origin-when-cross-origin
+Permissions-Policy: camera=(), microphone=(), geolocation=()
+Content-Type: application/json
+Transfer-Encoding: chunked
+Date: Sun, 22 Nov 2026 18:20:51 GMT
+

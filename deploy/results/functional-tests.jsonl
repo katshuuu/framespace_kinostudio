@@ -1,0 +1,14 @@
+PASS|health_direct|expected=200 got=200|{"status":"UP","groups":["liveness","readiness"]}
+PASS|web_ui_index|expected=200 got=200|
+PASS|requests_without_token|expected=401 got=401|{"timestamp":"2026-11-22T18:20:57.770510508Z","status":401,"code":"UNAUTHORIZED","message":"Требуется авторизация","path":"/api/requests","correlationId":"c91b338e-07fd-4321-9017-3
+PASS|admin_login|expected=200 got=200|
+PASS|password_change_not_required|expected=true got=true|flag=false
+PASS|auth_me|expected=200 got=200|{"id":"99af681c-7c90-4f9e-8f1e-6eb58858b2c7","email":"admin@example.org","displayName":"System Administrator","roles":["OPERATOR","ADMIN","VIEWER"],"passwordChangeRequired":false}
+PASS|clients_list|expected=200 got=200|
+PASS|clients_seed_ge_5|expected=true got=true|total=5
+PASS|locations_list|expected=200 got=200|
+PASS|requests_list|expected=200 got=200|
+PASS|requests_non_empty|expected=true got=true|count=10
+PASS|analytics_summary|expected=200 got=200|{"total":10,"active":10,"archived":0,"withUrgent":0,"averageBudget":340000.00,"byLocation":[{"name":"CONF-HALL","count":2},{"name":"SPB-EMB","count":2},{"name":"CLUB","count":1},{"name":"STUDIO-1","co
+PASS|illegal_status_transition_blocked|expected=blocked got=blocked|http=200 failures=1
+PASS|health_via_https_proxy|expected=200 got=200|{"status":"UP","groups":["liveness","readiness"]}

@@ -1,0 +1,5 @@
+timestamp=2026-11-22T18:20:58Z
+base=http://127.0.0.1:8080
+passed=14
+failed=0
+total=14

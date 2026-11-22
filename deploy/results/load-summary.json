@@ -1,0 +1,55 @@
+{
+  "timestamp": "2026-11-22T18:20:57.579263Z",
+  "scenarios": [
+    {
+      "name": "health_500x25",
+      "file": "ab-health.txt",
+      "complete_requests": "500",
+      "failed_requests": "0",
+      "requests_per_sec": "2213.88",
+      "time_per_request_mean_ms": "11.292",
+      "transfer_rate_kb_s": "1714.46",
+      "non2xx": null
+    },
+    {
+      "name": "ui_200x20",
+      "file": "ab-ui.txt",
+      "complete_requests": "200",
+      "failed_requests": "0",
+      "requests_per_sec": "1210.11",
+      "time_per_request_mean_ms": "16.527",
+      "transfer_rate_kb_s": "13798.11",
+      "non2xx": null
+    },
+    {
+      "name": "clients_auth_200x20",
+      "file": "ab-clients.txt",
+      "complete_requests": "200",
+      "failed_requests": "0",
+      "requests_per_sec": "1269.20",
+      "time_per_request_mean_ms": "15.758",
+      "transfer_rate_kb_s": "2591.69",
+      "non2xx": null
+    },
+    {
+      "name": "requests_auth_200x20",
+      "file": "ab-requests.txt",
+      "complete_requests": "200",
+      "failed_requests": "0",
+      "requests_per_sec": "925.07",
+      "time_per_request_mean_ms": "21.620",
+      "transfer_rate_kb_s": "7170.16",
+      "non2xx": null
+    },
+    {
+      "name": "login_fail_20x4",
+      "file": "ab-login-fail.txt",
+      "complete_requests": "20",
+      "failed_requests": "0",
+      "requests_per_sec": "6.07",
+      "time_per_request_mean_ms": "658.815",
+      "transfer_rate_kb_s": "5.69",
+      "non2xx": "20"
+    }
+  ]
+}

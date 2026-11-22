@@ -28,3 +28,8 @@ _to_delete/
 # Docker: файлы экспорта
 exports/*
 !exports/.gitkeep
+
+# TLS keys generated locally for SPO deploy (run deploy/scripts/generate-ssl.sh)
+deploy/nginx/ssl/*.key
+deploy/nginx/ssl/*.crt
+deploy/nginx/ssl/*.pem

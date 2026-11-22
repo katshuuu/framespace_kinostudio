@@ -1,0 +1,54 @@
+CONNECTED(00000005)
+---
+Certificate chain
+ 0 s:C=RU, ST=Moscow, L=Moscow, O=FrameSpace, OU=SPO-KR3, CN=localhost
+   i:C=RU, ST=Moscow, L=Moscow, O=FrameSpace, OU=SPO-KR3, CN=localhost
+   a:PKEY: RSA, 2048 (bit); sigalg: sha256WithRSAEncryption
+   v:NotBefore: Nov 22 18:16:48 2026 GMT; NotAfter: Feb 24 18:16:48 2029 GMT
+---
+Server certificate
+-----BEGIN CERTIFICATE-----
+MIIDsDCCApigAwIBAgIUIs4wSOiHKDAFU7is+id/oMp8Xt4wDQYJKoZIhvcNAQEL
+BQAwajELMAkGA1UEBhMCUlUxDzANBgNVBAgMBk1vc2NvdzEPMA0GA1UEBwwGTW9z
+Y293MRMwEQYDVQQKDApGcmFtZVNwYWNlMRAwDgYDVQQLDAdTUE8tS1IzMRIwEAYD
+VQQDDAlsb2NhbGhvc3QwHhcNMjYxMTIyMTgxNjQ4WhcNMjkwMjI0MTgxNjQ4WjBq
+MQswCQYDVQQGEwJSVTEPMA0GA1UECAwGTW9zY293MQ8wDQYDVQQHDAZNb3Njb3cx
+EzARBgNVBAoMCkZyYW1lU3BhY2UxEDAOBgNVBAsMB1NQTy1LUjMxEjAQBgNVBAMM
+CWxvY2FsaG9zdDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAJfgLiiH
+/nziod+mHE+6Fxl8NV86NWQ7sX+2qjY+VxUs1Bb17uqCGJGkmznGa061wxaaZwC5
+sOZ2C9e8Yp0a3hIdCrjJWeyJHbPC1XDZZvaVR8nlptbKI3nHb6rpXn6FORbdZDau
+ZOoAEhz7T8Ma3t214YvkycyH7UiwMaTJfGxsQjB9+VJb4Z8ikwrPaFZCFj5ORV2q
+XTjDvBLeYSlMS0rbJFEaujiV2rrPmwO+DjYIFVS5FafUVFD35GeKF6pGzwCU49yX
+/SPEKKkpjgKwEj9d6j8hGkI9U58y4guyesU5I6KqT+ovbVvlpAOlT4Xsi80ZglcR
+QoSP0BiAmF2gWfsCAwEAAaNOMEwwHQYDVR0OBBYEFAfb9sj1Aw9PL+PctIxjNTAg
+nKAwMA8GA1UdEwEB/wQFMAMBAf8wGgYDVR0RBBMwEYIJbG9jYWxob3N0hwR/AAAB
+MA0GCSqGSIb3DQEBCwUAA4IBAQARbnFB46BHh9FBiW58qsrY9/qZgE/RG/cP8v/k
+Voul5h38eZBLQip96EyYfe4voyefaqLs0/0akT1eeSbk9yx0Ku6Ja8G6z3nogteG
+Y5rvImRwIrtTvxz9WlvdNavh0lh9Nsdh0zKNhaGBcNveplycRvrwAmwBn7zo87Mb
+FCBwqSVzQ8TgIg1SVcK8JjaHHDiy5dwsAniLt/zBw8HlvD0YVMBTa9WtZE1r9KMX
+4nw32NpWToWZEOQcWAlnzqqZzYkrihprdHAtYdfn0xf0CEdJseLOx6s4kYMnYWKJ
+jS34hGEPQovB2MBd89fwLllD7q9j8bSrzdPE16WuQyo8tYID
+-----END CERTIFICATE-----
+subject=C=RU, ST=Moscow, L=Moscow, O=FrameSpace, OU=SPO-KR3, CN=localhost
+issuer=C=RU, ST=Moscow, L=Moscow, O=FrameSpace, OU=SPO-KR3, CN=localhost
+---
+No client certificate CA names sent
+Peer signing digest: SHA256
+Peer signature type: rsa_pss_rsae_sha256
+Peer Temp Key: X25519, 253 bits
+---
+SSL handshake has read 1508 bytes and written 1652 bytes
+Verification error: self-signed certificate
+---
+New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384
+Protocol: TLSv1.3
+Server public key is 2048 bit
+This TLS version forbids renegotiation.
+Compression: NONE
+Expansion: NONE
+No ALPN negotiated
+Early data was not sent
+Verify return code: 18 (self-signed certificate)
+---
+ECH: NOT CONFIGURED: -103
+---

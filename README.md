@@ -7,7 +7,8 @@
 | Этап | Ветка | Интерфейс | Описание |
 |---|---|---|---|
 | КР №1 / №2 | `main`, `kr2-javafx` | Консоль + JavaFX | CRUD, роли, графики, экспорт — см. `README_KR2.md` |
-| КР №3 | **`kr3`** | Spring Boot REST | JWT, PostgreSQL + Flyway, Docker Compose, Swagger, web UI — см. `README_KR3.md` |
+| КР №3 (backend) | **`kr3`** | Spring Boot REST | JWT, PostgreSQL + Flyway, Docker Compose, Swagger, web UI — см. `README_KR3.md` |
+| КР №3 (СПО) | **`kr3-SPO`** | Деплой + отчёт | Инфраструктура, TLS, мониторинг, тесты работоспособности/нагрузки/безопасности — см. `deploy/README.md` |
 
 КР №1 и КР №2 используют слои `service` и `repository` в корне проекта. Backend КР №3 лежит в каталоге `backend/` и предоставляет REST API (в том числе для Android в КР №4).
 
@@ -36,6 +37,24 @@ cp .env.example .env
 
 Вход: `admin@example.org` / `DemoPassw0rd!x` (после первого входа система попросит сменить пароль).  
 Подробности, API и тесты: [README_KR3.md](README_KR3.md). Материалы защиты: `docs/defense-kr3.pdf`, текст устной защиты: `docs/defense-speech-kr3.pdf`.
+
+## КР №3 СПО — деплой, безопасность, отчёт
+
+Отдельная ветка **`kr3-SPO`**: развёртывание FrameSpace с nginx (TLS), мониторингом health, скриптами тестов и отчётом для СДО.
+
+```bash
+git clone https://github.com/katshuuu/framespace_kinostudio.git
+cd framespace_kinostudio
+git checkout kr3-SPO
+cp .env.example .env
+./deploy/scripts/deploy-spo.sh
+./deploy/scripts/functional-tests.sh
+./deploy/scripts/load-tests.sh
+./deploy/scripts/security-tests.sh
+```
+
+Инструкция: [deploy/README.md](deploy/README.md).  
+Отчёт (прикрепить в СДО): `docs/kr3-spo/report-kr3-spo.pdf`.
 
 ## Возможности
 

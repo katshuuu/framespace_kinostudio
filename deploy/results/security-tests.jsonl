@@ -1,0 +1,18 @@
+PASS|api_clients_requires_auth|expected=401 got=401|
+PASS|api_admin_requires_auth|expected=401 got=401|
+PASS|forged_jwt_rejected|expected=401 got=401|
+PASS|sqli_query_no_500|expected=safe got=safe|http=401
+PASS|actuator_health_public|expected=200 got=200|
+PASS|actuator_env_closed|expected=401 got=401|
+PASS|actuator_beans_closed|expected=401 got=401|
+PASS|swagger_requires_admin|expected=protected got=protected|http=401
+PASS|postgres_bound_localhost|expected=localhost got=localhost|127.0.0.1:55432
+PASS|tls_proxy_health|expected=200 got=200|
+PASS|tls_protocol_1_2_or_1_3|expected=ok got=ok|detected TLSv1.2/1.3
+PASS|header_hsts|expected=present got=present|
+PASS|header_nosniff|expected=present got=present|
+PASS|header_frame_deny|expected=present got=present|
+PASS|server_banner_minimal|expected=ok got=ok|nginx without version ideally
+PASS|http_redirects_to_https|expected=redirect got=redirect|http=301
+PASS|refresh_cookie_httponly|expected=present got=present|
+PASS|container_no_new_privileges|expected=present got=present|["no-new-privileges:true"] ["ALL"]

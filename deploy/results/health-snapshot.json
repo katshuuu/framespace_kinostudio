@@ -1,0 +1,5 @@
+{
+  "timestamp": "2026-11-22T18:18:20Z",
+  "http": { "url": "http://127.0.0.1:8080/actuator/health", "status": 200, "body": {"status":"UP","groups":["liveness","readiness"]} },
+  "https": { "url": "https://127.0.0.1:8443/actuator/health", "status": 200, "body": {"status":"UP","groups":["liveness","readiness"]} }
+}
